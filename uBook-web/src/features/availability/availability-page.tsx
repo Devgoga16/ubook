@@ -56,12 +56,12 @@ export function AvailabilityPage() {
         ) : (
           <div className="grid items-start gap-[18px] min-[1440px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <OpeningHoursCard
-              key={branch.id}
+              key={`hours-${branch.id}`}
               branch={branch}
               branches={active}
               canEdit={canEditBranches}
             />
-            <ExceptionsCard key={branch.id} branch={branch} canEdit={canEditBranches} />
+            <ExceptionsCard key={`exceptions-${branch.id}`} branch={branch} canEdit={canEditBranches} />
           </div>
         )}
       </section>

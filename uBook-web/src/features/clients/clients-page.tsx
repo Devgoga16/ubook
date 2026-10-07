@@ -125,11 +125,11 @@ export function ClientsPage() {
               <thead>
                 <tr>
                   <Th>Cliente</Th>
-                  <Th className="text-right">Visitas</Th>
-                  <Th>Última visita</Th>
+                  <Th className="hidden text-right sm:table-cell">Visitas</Th>
+                  <Th className="hidden md:table-cell">Última visita</Th>
                   <Th>Próxima cita</Th>
-                  <Th className="text-right">Gastado</Th>
-                  <Th>Etiquetas</Th>
+                  <Th className="hidden text-right lg:table-cell">Gastado</Th>
+                  <Th className="hidden lg:table-cell">Etiquetas</Th>
                 </tr>
               </thead>
               <tbody>
@@ -153,7 +153,7 @@ export function ClientsPage() {
                         </div>
                       </div>
                     </Td>
-                    <Td className="text-right">
+                    <Td className="hidden text-right sm:table-cell">
                       {c.stats.visits}
                       {c.stats.noShows > 0 && (
                         <span className="ml-1.5 text-2xs font-semibold text-bad" title="No asistió">
@@ -161,10 +161,10 @@ export function ClientsPage() {
                         </span>
                       )}
                     </Td>
-                    <Td className="text-ink-2">{formatDate(c.stats.lastVisit)}</Td>
+                    <Td className="hidden text-ink-2 md:table-cell">{formatDate(c.stats.lastVisit)}</Td>
                     <Td>{c.stats.nextAppointment ? <Tag tone="teal">{formatDate(c.stats.nextAppointment)}</Tag> : <span className="text-muted">—</span>}</Td>
-                    <Td className="text-right">{c.stats.spent ? formatCents(c.stats.spent) : '—'}</Td>
-                    <Td>
+                    <Td className="hidden text-right lg:table-cell">{c.stats.spent ? formatCents(c.stats.spent) : '—'}</Td>
+                    <Td className="hidden lg:table-cell">
                       <div className="flex gap-1">
                         {c.tags.slice(0, 3).map((t) => (
                           <Tag key={t} tone={t.toLowerCase() === 'vip' ? 'brand' : 'off'}>

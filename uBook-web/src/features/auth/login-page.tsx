@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Field, Input } from '@/components/ui/field'
+import { Field, Input, PasswordInput } from '@/components/ui/field'
 import { errorMessage } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth/auth-context'
 import { homeFor } from '@/lib/auth/home'
@@ -47,11 +47,11 @@ export function LoginPage() {
         </div>
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3.5">
           <FormError message={error} />
-          <Field label="Email" error={errors.email?.message}>
+          <Field label="Correo electrónico" error={errors.email?.message}>
             {(p) => <Input {...p} {...register('email')} type="email" autoComplete="email" autoFocus />}
           </Field>
           <Field label="Contraseña" error={errors.password?.message}>
-            {(p) => <Input {...p} {...register('password')} type="password" autoComplete="current-password" />}
+            {(p) => <PasswordInput {...p} {...register('password')} autoComplete="current-password" />}
           </Field>
           <Button type="submit" variant="primary" disabled={isSubmitting} className="mt-1 py-2.5">
             {isSubmitting ? 'Ingresando…' : 'Ingresar'}

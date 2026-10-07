@@ -1,11 +1,16 @@
 import * as Dialog from '@radix-ui/react-dialog'
+import { useQuery } from '@tanstack/react-query'
 import { Calendar, CalendarPlus, Clock, Lock, UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { formatPhone } from '@/features/clients/api'
+import { api } from '@/lib/api/client'
+import type { Client } from '@/lib/api/types'
 import { meets } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { BranchProvider } from '@/lib/auth/branch-context'
 import { PageMetaProvider, usePageMetaValue } from '@/lib/page-meta'
+import { Avatar } from '../ui/avatar'
 import { CommandPalette, type PaletteItem } from '../ui/command-palette'
 import { findNavItem, visibleNav } from './nav'
 import { Sidebar } from './sidebar'
@@ -82,7 +87,35 @@ function Shell() {
   const isPlatform = me?.context.ctx === 'platform'
   const allowed = (req: Parameters<typeof meets>[1]) => meets(me, req)
 
+  // Clientes desde la API mientras se escribe (2+ letras).
+  const [search, setSearch] = useState('')
+  const term = useDeferredValue(search.trim())
+  const canSearchClients = !isPlatform && allowed({ permission: 'client.read' })
+  const clients = useQuery({
+    queryKey: ['clients', 'palette', term],
+    queryFn: () => api<Client[]>(`/clients?limit=6&search=${encodeURIComponent(term)}`),
+    enabled: paletteOpen && canSearchClients && term.length >= 2,
+    placeholderData: (prev) => prev,
+  })
+  const clientItems: PaletteItem[] =
+    canSearchClients && term.length >= 2
+      ? (clients.data ?? []).map((c) => {
+          const name = `${c.firstName} ${c.lastName ?? ''}`.trim()
+          return {
+            id: `client:${c.id}`,
+            group: 'Clientes',
+            label: name,
+            hint: formatPhone(c.phone) || c.email || undefined,
+            leading: <Avatar name={name} size="xs" round />,
+            // La API ya filtró (por nombre, celular o DNI): que cmdk no los descarte.
+            keywords: [search],
+            onSelect: () => navigate(`/clientes/${c.id}`),
+          }
+        })
+      : []
+
   const paletteItems: PaletteItem[] = [
+    ...clientItems,
     ...(isPlatform
       ? []
       : [
@@ -90,7 +123,7 @@ function Shell() {
             ? [{ id: 'new-appointment', group: 'Acciones', label: 'Nueva cita', icon: CalendarPlus, shortcut: 'N', onSelect: () => navigate('/agenda/nueva') }]
             : []),
           ...(allowed({ permission: 'client.create' })
-            ? [{ id: 'new-client', group: 'Acciones', label: 'Nuevo cliente', icon: UserPlus, shortcut: 'C', onSelect: () => navigate('/clientes') }]
+            ? [{ id: 'new-client', group: 'Acciones', label: 'Nuevo cliente', icon: UserPlus, shortcut: 'C', onSelect: () => navigate('/clientes/nuevo') }]
             : []),
           ...(allowed({ permission: 'booking.read' })
             ? [{ id: 'today', group: 'Acciones', label: 'Ir a la agenda de hoy', icon: Calendar, onSelect: () => navigate('/agenda') }]
@@ -139,7 +172,17 @@ function Shell() {
           </section>
         </main>
 
-        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} items={paletteItems} />
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={(v) => {
+            setPaletteOpen(v)
+            if (!v) setSearch('')
+          }}
+          items={paletteItems}
+          search={search}
+          onSearchChange={setSearch}
+          placeholder={canSearchClients ? 'Buscar clientes, pantallas y acciones…' : 'Buscar pantallas y acciones…'}
+        />
       </div>
     </BranchProvider>
   )

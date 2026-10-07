@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/field'
 import { KpiFlat } from '@/components/ui/kpi'
 import { BUSINESS_TYPES } from '@/domain/business-types'
 import { usePlans } from '@/features/auth/plans'
+import { formatDate } from '@/features/clients/api'
 import { api } from '@/lib/api/client'
 import type { Paginated, PlatformOrganization, SubscriptionStatus } from '@/lib/api/types'
 
@@ -133,7 +134,7 @@ export function SuperadminPage() {
                       </Td>
                       <Td>{BUSINESS_TYPES.find((t) => t.key === org.businessType)?.label ?? '—'}</Td>
                       <Td>{org.subscription ? <Tag>{planName(org.subscription.planCode)}</Tag> : '—'}</Td>
-                      <Td className="text-muted">{new Date(org.createdAt).toLocaleDateString('es-PE')}</Td>
+                      <Td className="text-muted">{formatDate(org.createdAt)}</Td>
                       <Td>
                         <Tag tone={status.tone}>{status.label}</Tag>
                       </Td>

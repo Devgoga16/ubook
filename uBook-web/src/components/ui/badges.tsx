@@ -73,7 +73,7 @@ export function Pill({ children, className }: { children: ReactNode; className?:
 
 export function Kbd({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <kbd className={cn('rounded-[5px] border border-line-strong px-[5px] py-px font-sans text-2xs text-muted', className)}>
+    <kbd className={cn('whitespace-nowrap rounded-[5px] border border-line-strong px-[5px] py-px font-sans text-2xs text-muted', className)}>
       {children}
     </kbd>
   )

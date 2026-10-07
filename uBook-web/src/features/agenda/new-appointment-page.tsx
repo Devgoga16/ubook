@@ -124,6 +124,25 @@ export function NewAppointmentPage() {
     ['Noche', times.filter(([t]) => t >= '18:00')],
   ]
 
+  const actions = (
+    <>
+      {step > 0 && (
+        <Button onClick={() => setStep((s) => s - 1)}>
+          <ChevronLeft size={14} aria-hidden /> Atrás
+        </Button>
+      )}
+      {step < 4 ? (
+        <Button variant="primary" className="ml-auto" disabled={!canContinue} onClick={() => setStep((s) => s + 1)}>
+          Continuar <ChevronRight size={14} aria-hidden />
+        </Button>
+      ) : (
+        <Button variant="primary" className="ml-auto" disabled={create.isPending} onClick={() => void submit()}>
+          {create.isPending ? 'Agendando…' : 'Agendar cita'}
+        </Button>
+      )}
+    </>
+  )
+
   if (services.isLoading || professionals.isLoading) return <Skeleton className="h-[420px] rounded-card" />
 
   return (
@@ -299,7 +318,7 @@ export function NewAppointmentPage() {
           )}
         </Card>
 
-        <Card className="sticky top-5 flex flex-col gap-3">
+        <Card className="flex flex-col gap-3 lg:sticky lg:top-5">
           <h3 className="m-0 text-md font-bold">Resumen de la cita</h3>
           {[
             ['Servicio', service ? `${service.name} · ${terms?.durationMinutes ?? service.durationMinutes} min` : '—', 0],
@@ -324,23 +343,18 @@ export function NewAppointmentPage() {
             <span className="text-muted">Total</span>
             <b>{service ? formatCents(terms?.price ?? priceFor(assignedPro, service)) : '—'}</b>
           </div>
-          <div className="flex gap-2 pt-1">
-            {step > 0 && (
-              <Button onClick={() => setStep((s) => s - 1)}>
-                <ChevronLeft size={14} aria-hidden /> Atrás
-              </Button>
-            )}
-            {step < 4 ? (
-              <Button variant="primary" className="ml-auto" disabled={!canContinue} onClick={() => setStep((s) => s + 1)}>
-                Continuar <ChevronRight size={14} aria-hidden />
-              </Button>
-            ) : (
-              <Button variant="primary" className="ml-auto" disabled={create.isPending} onClick={() => void submit()}>
-                {create.isPending ? 'Agendando…' : 'Agendar cita'}
-              </Button>
-            )}
-          </div>
+          <div className="hidden gap-2 pt-1 lg:flex">{actions}</div>
         </Card>
+      </div>
+
+      {/* Celular y tablet: las acciones quedan siempre a mano, al pie de la pantalla. */}
+      <div className="h-16 lg:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-line bg-surface/95 px-4 py-3 shadow-[0_-8px_24px_rgb(31_34_69/0.08)] backdrop-blur lg:hidden">
+        <div className="mr-auto min-w-0">
+          <div className="text-2xs text-muted">Total</div>
+          <b className="tabular text-md">{service ? formatCents(terms?.price ?? priceFor(assignedPro, service)) : '—'}</b>
+        </div>
+        {actions}
       </div>
     </>
   )

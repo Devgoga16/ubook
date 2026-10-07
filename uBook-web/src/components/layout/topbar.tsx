@@ -2,6 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   ArrowLeftRight,
   Bell,
+  BellOff,
   CircleUser,
   House,
   LogOut,
@@ -12,15 +13,13 @@ import {
   Settings,
   Sun,
 } from 'lucide-react'
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAccess } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { cn } from '@/lib/cn'
 import { useTheme, type ThemePreference } from '@/lib/theme'
 import { Kbd } from '../ui/badges'
-import { Button, IconButton } from '../ui/button'
-import { Segmented } from '../ui/controls'
+import { IconButton } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/overlays'
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; icon: typeof Sun }> = [
@@ -59,8 +58,8 @@ function ThemeMenu() {
   )
 }
 
+/** Avisos de la app. Aún no hay notificaciones en tiempo real: el panel lo dice sin controles de más. */
 function NotificationsPanel() {
-  const [filter, setFilter] = useState<'all' | 'bookings' | 'payments' | 'system'>('all')
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -69,25 +68,14 @@ function NotificationsPanel() {
         </IconButton>
       </PopoverTrigger>
       <PopoverContent aria-label="Notificaciones">
-        <div className="mb-2 flex items-center">
-          <span className="text-md font-semibold">Notificaciones</span>
-          <Button size="sm" className="ml-auto" disabled>
-            Marcar todo como leído
-          </Button>
+        <div className="mb-1 text-md font-semibold">Notificaciones</div>
+        <div className="flex flex-col items-center gap-2 px-2 py-6 text-center">
+          <span className="grid size-10 place-items-center rounded-full bg-surface-2 text-muted">
+            <BellOff size={18} aria-hidden />
+          </span>
+          <p className="m-0 text-sm font-semibold">Estás al día</p>
+          <p className="m-0 text-xs text-muted">Las reservas nuevas y los adelantos por validar aparecen en el Dashboard.</p>
         </div>
-        <Segmented
-          aria-label="Filtrar notificaciones"
-          value={filter}
-          onValueChange={setFilter}
-          options={[
-            { value: 'all', label: 'Todas' },
-            { value: 'bookings', label: 'Reservas' },
-            { value: 'payments', label: 'Pagos' },
-            { value: 'system', label: 'Sistema' },
-          ]}
-          className="mb-2"
-        />
-        <p className="m-0 px-1.5 py-6 text-center text-sm text-muted">No tienes notificaciones nuevas.</p>
       </PopoverContent>
     </Popover>
   )
@@ -147,7 +135,9 @@ export function Topbar({
   onOpenSearch: () => void
   onOpenMenu: () => void
 }) {
-  const canConfigure = useAccess().can('organization.manage')
+  const { can } = useAccess()
+  const canConfigure = can('organization.manage')
+  const isPlatform = useAuth().me?.context.ctx === 'platform'
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-2">
@@ -167,9 +157,9 @@ export function Topbar({
           onClick={onOpenSearch}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-[9px] border border-line-strong bg-surface px-2.5 py-[7px] text-sm text-muted sm:min-w-[240px] sm:flex-none"
         >
-          <Search size={15} aria-hidden />
-          Buscar clientes, citas…
-          <Kbd className="ml-auto">Ctrl K</Kbd>
+          <Search size={15} className="flex-none" aria-hidden />
+          <span className="truncate">{!isPlatform && can('client.read') ? 'Buscar clientes…' : 'Buscar…'}</span>
+          <Kbd className="ml-auto hidden sm:inline-flex">Ctrl K</Kbd>
         </button>
         <ThemeMenu />
         <ProfileMenu />

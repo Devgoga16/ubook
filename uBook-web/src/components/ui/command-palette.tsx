@@ -1,7 +1,7 @@
 import { Command } from 'cmdk'
 import type { LucideIcon } from 'lucide-react'
 import { Search } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Kbd } from './badges'
 
 export interface PaletteItem {
@@ -21,10 +21,17 @@ export function CommandPalette({
   open,
   onOpenChange,
   items,
+  search,
+  onSearchChange,
+  placeholder = 'Buscar pantallas y acciones…',
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   items: PaletteItem[]
+  /** Texto buscado, para resultados que vienen de la API (clientes). */
+  search?: string
+  onSearchChange?: (value: string) => void
+  placeholder?: string
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -38,19 +45,34 @@ export function CommandPalette({
   }, [open, onOpenChange])
 
   const groups = [...new Set(items.map((i) => i.group))]
+  const itemValue = (i: PaletteItem) => `${i.label} ${i.id}`
+
+  // Los resultados de la API llegan después de escribir: al cambiar el primero, se selecciona.
+  const [selected, setSelected] = useState('')
+  const [lastFirst, setLastFirst] = useState('')
+  const first = items[0]
+  const firstValue = first?.group === 'Clientes' ? itemValue(first) : ''
+  if (firstValue !== lastFirst) {
+    setLastFirst(firstValue)
+    if (firstValue) setSelected(firstValue)
+  }
 
   return (
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
       label="Búsqueda rápida"
+      value={selected}
+      onValueChange={setSelected}
       overlayClassName="fixed inset-0 z-50 bg-overlay"
       contentClassName="fixed top-[12vh] left-1/2 z-50 w-[min(580px,calc(100%-32px))] -translate-x-1/2 overflow-hidden rounded-panel bg-surface shadow-pop"
     >
       <div className="flex items-center gap-2.5 border-b border-line px-4 py-3.5">
         <Search size={18} className="text-muted" aria-hidden />
         <Command.Input
-          placeholder="Buscar clientes, citas, acciones…"
+          value={search}
+          onValueChange={onSearchChange}
+          placeholder={placeholder}
           className="min-w-0 flex-1 border-0 bg-transparent text-md text-ink outline-none placeholder:text-muted"
         />
         <Kbd>Esc</Kbd>

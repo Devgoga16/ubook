@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Stepper, Timeline } from '@/components/ui/display'
-import { Field, Input } from '@/components/ui/field'
+import { Field, Input, PasswordInput } from '@/components/ui/field'
 import { BUSINESS_TYPES } from '@/domain/business-types'
 import { api, ApiError, errorMessage } from '@/lib/api/client'
 import type { Branch } from '@/lib/api/types'
@@ -162,7 +162,7 @@ export function RegisterPage() {
                   <Field label="Apellido" error={errors.lastName?.message}>
                     {(p) => <Input {...p} {...register('lastName')} autoComplete="family-name" />}
                   </Field>
-                  <Field label="Email" error={errors.email?.message}>
+                  <Field label="Correo electrónico" error={errors.email?.message}>
                     {(p) => <Input {...p} {...register('email')} type="email" autoComplete="email" />}
                   </Field>
                   <Field label="Celular (opcional)" hint="Ej.: 987 654 321" error={errors.phone?.message}>
@@ -181,7 +181,7 @@ export function RegisterPage() {
                     error={errors.password?.message}
                     className="sm:col-span-2"
                   >
-                    {(p) => <Input {...p} {...register('password')} type="password" autoComplete="new-password" />}
+                    {(p) => <PasswordInput {...p} {...register('password')} autoComplete="new-password" />}
                   </Field>
                 </div>
               </>

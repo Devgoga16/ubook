@@ -34,6 +34,7 @@ import { BackLink } from '@/components/ui/page'
 import { APPOINTMENT_STATUS_META } from '@/domain/appointment-status'
 import { useBranchesWithHours } from '@/features/availability/api'
 import { ClientPicker } from '@/features/clients/client-picker'
+import { formatPhone } from '@/features/clients/api'
 import { useProfessionals } from '@/features/professionals/api'
 import { useServices } from '@/features/services/api'
 import { errorMessage } from '@/lib/api/client'
@@ -235,7 +236,7 @@ function ClientPanel({ a, canEdit }: { a: Appointment; canEdit: boolean }) {
           ) : (
             <div className="truncate text-lg font-semibold">{name}</div>
           )}
-          <div className="text-xs text-muted">{a.client?.phone ?? 'Sin celular'}</div>
+          <div className="text-xs text-muted">{a.client?.phone ? formatPhone(a.client.phone) : 'Sin celular'}</div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">

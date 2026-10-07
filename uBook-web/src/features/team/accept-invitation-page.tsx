@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState, Skeleton } from '@/components/ui/display'
-import { Field, Input } from '@/components/ui/field'
+import { Field, Input, PasswordInput } from '@/components/ui/field'
 import { AuthLayout, FormError } from '@/features/auth/auth-layout'
 import { ApiError, api, errorMessage } from '@/lib/api/client'
 import type { InvitationPreview } from '@/lib/api/types'
@@ -103,9 +103,8 @@ export function AcceptInvitationPage() {
             )}
             <Field label={inv.accountExists ? 'Tu contraseña' : 'Crea una contraseña'} error={errors.password} hint={inv.accountExists ? undefined : 'Mínimo 10 caracteres, con letras y números.'}>
               {(p) => (
-                <Input
+                <PasswordInput
                   {...p}
-                  type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   autoComplete={inv.accountExists ? 'current-password' : 'new-password'}
@@ -115,7 +114,7 @@ export function AcceptInvitationPage() {
             </Field>
             {!inv.accountExists && (
               <Field label="Repite la contraseña" error={errors.confirm}>
-                {(p) => <Input {...p} type="password" value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} autoComplete="new-password" />}
+                {(p) => <PasswordInput {...p} value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} autoComplete="new-password" />}
               </Field>
             )}
             <Button type="submit" variant="primary" disabled={busy} className="mt-1 py-2.5">

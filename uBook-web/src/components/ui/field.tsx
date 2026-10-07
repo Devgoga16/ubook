@@ -1,4 +1,5 @@
-import { useId, type ComponentProps, type ReactNode } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { useId, useState, type ComponentProps, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 const control =
@@ -7,6 +8,25 @@ const control =
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
   return <input className={cn(control, className)} {...props} />
+}
+
+/** Contraseña con botón para mostrarla u ocultarla. */
+export function PasswordInput({ className, ...props }: Omit<ComponentProps<'input'>, 'type'>) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <div className="relative">
+      <input type={visible ? 'text' : 'password'} className={cn(control, 'pr-10', className)} {...props} />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 grid w-10 cursor-pointer place-items-center rounded-r-control text-muted hover:text-ink"
+      >
+        {visible ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
+      </button>
+    </div>
+  )
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {

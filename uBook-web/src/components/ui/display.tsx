@@ -89,7 +89,22 @@ export function Timeline({
 /** Pasos de un asistente (Nueva cita, Onboarding). */
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <ol className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label="Pasos">
+    <>
+      {/* Celular: una línea con el paso actual y una barra de avance. */}
+      <div className="flex flex-col gap-2 sm:hidden">
+        <div className="flex items-baseline justify-between gap-3 text-sm">
+          <span className="font-semibold text-ink">{steps[current]}</span>
+          <span className="text-xs text-muted">
+            Paso {Math.min(current + 1, steps.length)} de {steps.length}
+          </span>
+        </div>
+        <div className="flex gap-1" aria-hidden>
+          {steps.map((s, i) => (
+            <span key={s} className={cn('h-1 flex-1 rounded-full', i <= current ? 'bg-teal' : 'bg-line-strong')} />
+          ))}
+        </div>
+      </div>
+      <ol className="m-0 hidden list-none flex-wrap gap-2 p-0 sm:flex" aria-label="Pasos">
       {steps.map((s, i) => {
         const done = i < current
         const active = i === current
@@ -116,7 +131,8 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
           </li>
         )
       })}
-    </ol>
+      </ol>
+    </>
   )
 }
 
