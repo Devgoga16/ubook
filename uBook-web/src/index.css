@@ -31,6 +31,7 @@
   --color-teal-ink: var(--teal-ink);
   --color-teal-soft: var(--teal-soft);
   --color-teal-line: var(--teal-line);
+  --color-on-teal: var(--on-teal);
   --color-on-grad: var(--on-grad);
   --color-ok: var(--ok);
   --color-ok-bg: var(--ok-bg);
@@ -169,7 +170,7 @@
 /* ── Landing ─────────────────────────────────────────────── */
 
 @utility text-grad {
-  background-image: var(--grad);
+  background-image: var(--grad-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

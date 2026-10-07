@@ -121,7 +121,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             <span
               className={cn(
                 'grid size-6 place-items-center rounded-full border-[1.5px] border-line-strong text-2xs',
-                done && 'border-teal bg-teal text-white',
+                done && 'border-teal bg-teal text-on-teal',
                 active && 'bg-grad border-0',
               )}
             >

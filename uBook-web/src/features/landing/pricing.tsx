@@ -42,7 +42,7 @@ export function Pricing() {
               key={plan.code}
               className={cn(
                 'relative flex flex-col rounded-[22px] p-[1.5px]',
-                featured ? 'bg-grad shadow-[0_25px_60px_-20px_rgb(79_120_176/0.55)] lg:-my-4' : 'bg-line',
+                featured ? 'bg-grad shadow-[0_25px_60px_-20px_rgb(36_51_82/0.55)] lg:-my-4' : 'bg-line',
               )}
             >
               <div className="flex flex-1 flex-col gap-6 rounded-[21px] bg-surface p-7 text-ink">

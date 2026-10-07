@@ -123,7 +123,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             className="bg-grad flex min-h-[118px] flex-1 cursor-pointer flex-col justify-between gap-4 rounded-[12px] p-4 text-left text-md leading-tight font-semibold"
           >
             Agregar nuevo negocio
-            <span className="grid size-[26px] place-items-center self-center rounded-full bg-white text-[#575B9F]">+</span>
+            <span className="grid size-[26px] place-items-center self-center rounded-full bg-white text-[#243352]">+</span>
           </button>
         </div>
       )}

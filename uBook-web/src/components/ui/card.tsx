@@ -40,7 +40,7 @@ export function AddCard({
         className="bg-grad flex flex-1 cursor-pointer flex-col items-center justify-center gap-3.5 rounded-[12px] p-[18px] text-center text-[15px] font-semibold"
       >
         {label}
-        <span className="grid size-[26px] place-items-center rounded-full bg-white text-[#575B9F]">+</span>
+        <span className="grid size-[26px] place-items-center rounded-full bg-white text-[#243352]">+</span>
       </button>
     </div>
   )

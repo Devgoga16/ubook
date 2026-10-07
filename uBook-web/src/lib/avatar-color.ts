@@ -1,8 +1,8 @@
 /**
- * Paleta para profesionales y clientes. Tonos del prototipo oscurecidos para
- * que las iniciales en blanco tengan contraste ≥ 4.5:1.
+ * Paleta para profesionales y clientes (azules noche, pizarra y ámbar oscuro),
+ * con contraste ≥ 4.5:1 para las iniciales en blanco.
  */
-export const AVATAR_COLORS = ['#575B9F', '#2F7C8C', '#4A6FA5', '#6A5FA8', '#3B6F8F', '#7B4F96', '#45579C', '#2A6F7F']
+export const AVATAR_COLORS = ['#243352', '#2F5D8A', '#8F5400', '#3E5C76', '#1F6F78', '#7A4B1E', '#4A4F8C', '#5A6478']
 
 /** Color estable a partir del nombre. */
 export function colorFor(name: string): string {

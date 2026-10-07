@@ -374,7 +374,7 @@ export function DesignPage() {
         icon={Sparkles}
         title="Se liberó jueves 8 · 15:00 con Diego Rojas"
         description="Hugo Silva canceló. 3 personas de la lista coinciden con ese horario y servicio."
-        action={<Button className="border-0 bg-white text-[#575B9F] hover:bg-white">Avisar a las 3</Button>}
+        action={<Button className="border-0 bg-white text-[#243352] hover:bg-white">Avisar a las 3</Button>}
       />
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">

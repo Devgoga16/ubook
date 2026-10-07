@@ -6,20 +6,20 @@ const escape = (text: string) =>
 /** Diseño común: logo, título, párrafos y un botón. Estilos en línea para clientes de correo. */
 function layout(opts: { title: string; paragraphs: string[]; cta?: { label: string; url: string }; footer?: string }): string {
   const body = opts.paragraphs
-    .map((p) => (p.startsWith('<table') ? p : `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#33365A">${p}</p>`))
+    .map((p) => (p.startsWith('<table') ? p : `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#3A4359">${p}</p>`))
     .join('');
   const button = opts.cta
-    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#3F4497;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px">${escape(opts.cta.label)}</a></p>
-       <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#7A7D99">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${escape(opts.cta.url)}" style="color:#2F7C8C;word-break:break-all">${escape(opts.cta.url)}</a></p>`
+    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#243352;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px">${escape(opts.cta.label)}</a></p>
+       <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#626B84">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${escape(opts.cta.url)}" style="color:#2F5D8A;word-break:break-all">${escape(opts.cta.url)}</a></p>`
     : '';
-  return `<!doctype html><html lang="es"><body style="margin:0;background:#F3F4F9;font-family:Montserrat,Segoe UI,Arial,sans-serif">
+  return `<!doctype html><html lang="es"><body style="margin:0;background:#F3F5F8;font-family:Montserrat,Segoe UI,Arial,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:16px;padding:32px">
       <tr><td>
-        <div style="font-size:22px;font-weight:700;color:#3F4497;margin-bottom:24px">u<span style="color:#2F9AAE">Book</span></div>
-        <h1 style="margin:0 0 16px;font-size:20px;color:#1F2245">${escape(opts.title)}</h1>
+        <div style="font-size:22px;font-weight:700;color:#243352;margin-bottom:24px">u<span style="color:#E09A2C">Book</span></div>
+        <h1 style="margin:0 0 16px;font-size:20px;color:#1B2338">${escape(opts.title)}</h1>
         ${body}${button}
-        ${opts.footer ? `<p style="margin:24px 0 0;font-size:12px;color:#7A7D99">${opts.footer}</p>` : ''}
+        ${opts.footer ? `<p style="margin:24px 0 0;font-size:12px;color:#626B84">${opts.footer}</p>` : ''}
       </td></tr>
     </table>
   </td></tr></table></body></html>`;
@@ -140,7 +140,7 @@ export function bookingEmail(kind: BookingEmailKind, d: BookingEmailDetails): Ma
   const table = `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:4px 0 8px;border-collapse:collapse">${rows
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:6px 12px 6px 0;font-size:13px;color:#7A7D99;white-space:nowrap;vertical-align:top">${k}</td><td style="padding:6px 0;font-size:14px;color:#1F2245;font-weight:600">${escape(v)}</td></tr>`,
+        `<tr><td style="padding:6px 12px 6px 0;font-size:13px;color:#626B84;white-space:nowrap;vertical-align:top">${k}</td><td style="padding:6px 0;font-size:14px;color:#1B2338;font-weight:600">${escape(v)}</td></tr>`,
     )
     .join('')}</table>`;
   const cta =

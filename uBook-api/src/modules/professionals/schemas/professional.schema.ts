@@ -42,7 +42,7 @@ export class Professional {
   @Prop({ trim: true })
   title?: string;
 
-  @Prop({ default: '#575B9F', match: /^#[0-9a-fA-F]{6}$/ })
+  @Prop({ default: '#243352', match: /^#[0-9a-fA-F]{6}$/ })
   color: string;
 
   @Prop({ trim: true, lowercase: true })

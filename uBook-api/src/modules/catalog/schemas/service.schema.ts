@@ -58,7 +58,7 @@ export class Service {
   onlineBooking: boolean;
 
   /** Color en la agenda. */
-  @Prop({ default: '#575B9F', match: /^#[0-9a-fA-F]{6}$/ })
+  @Prop({ default: '#243352', match: /^#[0-9a-fA-F]{6}$/ })
   color: string;
 
   /** Archivado: no se ofrece, pero se conserva para el historial de citas. */

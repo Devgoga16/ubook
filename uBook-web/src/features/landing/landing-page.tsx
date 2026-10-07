@@ -268,7 +268,7 @@ function Hero() {
           <div data-reveal style={delay(240)} className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/registro"
-              className="bg-grad group inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-md font-bold no-underline shadow-[0_14px_34px_-12px_rgb(79_120_176/0.8)] transition hover:brightness-110 sm:w-auto"
+              className="bg-grad group inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-md font-bold no-underline shadow-[0_14px_34px_-12px_rgb(36_51_82/0.8)] transition hover:brightness-110 sm:w-auto"
             >
               Empieza gratis 30 días
               <ArrowRight size={17} className="transition group-hover:translate-x-0.5" aria-hidden />
@@ -434,7 +434,7 @@ function FeaturesSection() {
             key={f.title}
             data-reveal
             style={delay((i % 3) * 80)}
-            className="group relative overflow-hidden rounded-[20px] border border-line bg-surface p-6 transition duration-300 hover:-translate-y-1 hover:border-teal-line hover:shadow-[0_20px_50px_-20px_rgb(79_120_176/0.4)]"
+            className="group relative overflow-hidden rounded-[20px] border border-line bg-surface p-6 transition duration-300 hover:-translate-y-1 hover:border-teal-line hover:shadow-[0_20px_50px_-20px_rgb(36_51_82/0.4)]"
           >
             <div className="absolute -top-24 -right-24 size-48 rounded-full glow opacity-0 blur-2xl transition duration-500 group-hover:opacity-100" aria-hidden />
             <span className="bg-grad relative grid size-11 place-items-center rounded-[12px] shadow-card">
@@ -609,7 +609,7 @@ function FinalCta() {
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/registro"
-              className="bg-grad group inline-flex items-center gap-2 rounded-full px-8 py-4 text-md font-bold no-underline shadow-[0_14px_34px_-12px_rgb(79_120_176/0.8)] transition hover:brightness-110"
+              className="bg-grad group inline-flex items-center gap-2 rounded-full px-8 py-4 text-md font-bold no-underline shadow-[0_14px_34px_-12px_rgb(36_51_82/0.8)] transition hover:brightness-110"
             >
               Crear mi cuenta gratis
               <ArrowRight size={17} className="transition group-hover:translate-x-0.5" aria-hidden />

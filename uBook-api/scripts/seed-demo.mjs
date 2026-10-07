@@ -29,14 +29,14 @@ const cortes = await call('/service-categories', { name: 'Cortes' }, t);
 const barba = await call('/service-categories', { name: 'Barba' }, t);
 const s = [];
 for (const [name, durationMinutes, price, categoryId, color] of [
-  ['Corte clásico', 30, 3500, cortes.id, '#575B9F'],
-  ['Corte + barba', 45, 5000, cortes.id, '#2F7C8C'],
-  ['Afeitado con toalla', 30, 3000, barba.id, '#4A6FA5'],
+  ['Corte clásico', 30, 3500, cortes.id, '#243352'],
+  ['Corte + barba', 45, 5000, cortes.id, '#8F5400'],
+  ['Afeitado con toalla', 30, 3000, barba.id, '#2F5D8A'],
 ]) s.push(await call('/services', { name, durationMinutes, price, categoryId, color, bufferAfterMinutes: 10 }, t));
 const h = (x) => x * 60;
 const luis = await call('/professionals', {
   displayName: 'Luis Paredes', title: 'Barbero senior', branchIds: [main.id, si.id],
-  services: [{ serviceId: s[0].id }, { serviceId: s[1].id, price: 5500 }], commissionPercent: 45, color: '#575B9F',
+  services: [{ serviceId: s[0].id }, { serviceId: s[1].id, price: 5500 }], commissionPercent: 45, color: '#243352',
 }, t);
 await call(`/professionals/${luis.id}/schedule`, {
   branchId: main.id,
@@ -51,7 +51,7 @@ await call(`/professionals/${luis.id}/schedule`, {
 }, t, 'PUT');
 await call(`/professionals/${luis.id}/time-off`, { type: 'vacation', title: 'Vacaciones', startsAt: '2026-10-19T05:00:00Z', endsAt: '2026-10-27T05:00:00Z' }, t);
 const andrea = await call('/professionals', {
-  displayName: 'Andrea Quispe', title: 'Estilista', branchIds: [main.id], color: '#2F7C8C',
+  displayName: 'Andrea Quispe', title: 'Estilista', branchIds: [main.id], color: '#1F6F78',
   services: [{ serviceId: s[0].id }, { serviceId: s[2].id }],
 }, t);
 await call(`/professionals/${andrea.id}/schedule`, {

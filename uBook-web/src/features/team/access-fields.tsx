@@ -52,7 +52,7 @@ export function RolePicker({
                 aria-hidden
                 className={cn(
                   'mt-0.5 grid size-[18px] flex-none place-items-center rounded-[5px] border-[1.5px] border-line-strong',
-                  on && 'border-teal bg-teal text-white',
+                  on && 'border-teal bg-teal text-on-teal',
                 )}
               >
                 {on && <Check size={11} strokeWidth={3} />}
