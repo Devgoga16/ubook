@@ -55,3 +55,22 @@ export class SwitchOrganizationDto {
   @IsMongoId()
   organizationId: string;
 }
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @MinLength(20)
+  @MaxLength(200)
+  token: string;
+
+  /** Misma regla que al registrarse. */
+  @IsString()
+  @MinLength(10)
+  @MaxLength(200)
+  @Matches(/(?=.*[A-Za-z])(?=.*\d)/, { message: 'La contraseña debe incluir letras y números' })
+  password: string;
+}

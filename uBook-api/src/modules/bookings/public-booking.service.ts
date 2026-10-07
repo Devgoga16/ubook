@@ -9,6 +9,7 @@ import { Service } from '../catalog/schemas/service.schema.js';
 import { normalizePhone } from '../clients/clients.service.js';
 import { Client, normalizeSearch, type ClientDocument } from '../clients/schemas/client.schema.js';
 import { Branch } from '../organization/schemas/branch.schema.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { Organization, type OrganizationDocument } from '../organization/schemas/organization.schema.js';
 import { EntitlementsService } from '../platform/entitlements.service.js';
 import { Professional } from '../professionals/schemas/professional.schema.js';
@@ -43,6 +44,7 @@ export class PublicBookingService {
     private readonly waitlist: WaitlistService,
     private readonly promotions: PromotionsService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /* ---------- Página del negocio ---------- */
@@ -187,6 +189,12 @@ export class PublicBookingService {
         promotion,
         ...(depositRule && dto.deposit && { deposit: { type: depositRule.type, value: depositRule.value, ...dto.deposit } }),
       });
+      await this.notifications.notify({
+        type: depositRule ? 'deposit_submitted' : pending ? 'booking_pending' : 'booking_created',
+        title: depositRule ? 'Adelanto por validar' : pending ? 'Reserva por aprobar' : 'Nueva reserva online',
+        body: await this.describe(appt, org),
+        ...this.target(appt),
+      });
       return { token: this.links.token(appt.id as string), booking: await this.view(appt, org) };
     });
   }
@@ -202,6 +210,15 @@ export class PublicBookingService {
       await this.assertOnlineService(dto.serviceId);
       const client = await this.resolveClient(dto as unknown as PublicBookingDto);
       await this.waitlist.create({ ...dto, clientId: client.id as string }, 'online');
+      const svc = await this.services.findById(dto.serviceId).select('name').exec();
+      const range = dto.dateFrom === dto.dateTo ? dayLabel(dto.dateFrom) : `del ${dayLabel(dto.dateFrom)} al ${dayLabel(dto.dateTo)}`;
+      await this.notifications.notify({
+        type: 'waitlist_joined',
+        title: 'Nuevo en lista de espera',
+        body: [`${client.firstName} ${client.lastName ?? ''}`.trim(), svc?.name, range].filter(Boolean).join(' · '),
+        branchId: dto.branchId,
+        professionalId: dto.professionalId ?? null,
+      });
       return { ok: true, firstName: client.firstName };
     });
   }
@@ -213,13 +230,29 @@ export class PublicBookingService {
   }
 
   cancel(token: string, reason?: string) {
-    return this.withBooking(token, async (appt, org) => this.view(await this.appointmentsService.cancelByClient(appt.id as string, reason), org));
+    return this.withBooking(token, async (appt, org) => {
+      const cancelled = await this.appointmentsService.cancelByClient(appt.id as string, reason);
+      await this.notifications.notify({
+        type: 'booking_cancelled',
+        title: 'El cliente canceló su cita',
+        body: [await this.describe(cancelled, org), reason?.trim() && `Motivo: ${reason.trim()}`].filter(Boolean).join(' · '),
+        ...this.target(cancelled),
+      });
+      return this.view(cancelled, org);
+    });
   }
 
   reschedule(token: string, startsAt: Date) {
     return this.withBooking(token, async (appt, org) => {
       await this.assertPageOpen(org);
+      const before = await this.when(appt, org);
       const moved = await this.appointmentsService.rescheduleByClient(appt.id as string, startsAt, org.toObject().bookingRules.maxReschedules);
+      await this.notifications.notify({
+        type: 'booking_rescheduled',
+        title: 'El cliente cambió el horario',
+        body: `${await this.describe(moved, org)} (antes: ${before})`,
+        ...this.target(moved),
+      });
       return this.view(moved, org);
     });
   }
@@ -251,6 +284,35 @@ export class PublicBookingService {
   private async assertPageOpen(org: OrganizationDocument): Promise<void> {
     const ent = await this.entitlements.get(org.id as string);
     if (ent.readOnly || ent.features.public_booking_page !== true) throw unavailable();
+  }
+
+  /** "Ana Ríos · Corte clásico · vie 10 oct, 16:00" para los avisos del equipo. */
+  private async describe(appt: AppointmentDocument, org: OrganizationDocument): Promise<string> {
+    const [client, svc] = await Promise.all([
+      this.clients.findById(appt.clientId).select('firstName lastName').exec(),
+      this.services.findById(appt.serviceId).select('name').exec(),
+    ]);
+    const name = client ? `${client.firstName} ${client.lastName ?? ''}`.trim() : '';
+    return [name, svc?.name, await this.when(appt, org)].filter(Boolean).join(' · ');
+  }
+
+  private async when(appt: AppointmentDocument, org: OrganizationDocument): Promise<string> {
+    const branch = await this.branches.findById(appt.branchId).select('timezone').exec();
+    return new Intl.DateTimeFormat('es-PE', {
+      timeZone: branch?.timezone ?? org.timezone,
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .format(appt.startsAt)
+      .replace(/\./g, '');
+  }
+
+  private target(appt: AppointmentDocument) {
+    return { appointmentId: appt.id as string, branchId: appt.branchId.toString(), professionalId: appt.professionalId.toString() };
   }
 
   /** Logo firmado, solo si el plan incluye marca propia. */
@@ -406,4 +468,10 @@ export class PublicBookingService {
       freeCancellationHours: rules.freeCancellationHours,
     };
   }
+}
+
+/** "2026-10-10" → "10 oct" */
+function dayLabel(ymd: string): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(y!, m! - 1, d!))).replace('.', '');
 }

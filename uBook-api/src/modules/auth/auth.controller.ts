@@ -16,7 +16,8 @@ import { AcceptInvitationDto } from '../organization/dto/invitation.dto.js';
 import { CreateOrganizationDto } from '../organization/dto/organization.dto.js';
 import { InvitationsService } from '../organization/invitations.service.js';
 import { AuthService, type AuthResult } from './auth.service.js';
-import { LoginDto, RegisterDto, SwitchOrganizationDto } from './dto/auth.dto.js';
+import { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto, SwitchOrganizationDto } from './dto/auth.dto.js';
+import { PasswordResetService } from '../identity/password-reset.service.js';
 
 export const REFRESH_COOKIE = 'ubook_rt';
 export const REFRESH_COOKIE_PATH = '/api/auth';
@@ -28,6 +29,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly invitations: InvitationsService,
+    private readonly passwordReset: PasswordResetService,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -60,6 +62,30 @@ export class AuthController {
   @HttpCode(200)
   async acceptInvitation(@Body() dto: AcceptInvitationDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     return this.respond(res, await this.auth.acceptInvitation(dto, clientInfo(req)));
+  }
+
+  /** Envía el enlace para crear una contraseña nueva. Responde igual exista o no la cuenta. */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @Post('forgot-password')
+  @HttpCode(204)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.passwordReset.request(dto.email);
+  }
+
+  @Public()
+  @Throttle(STRICT_THROTTLE)
+  @Get('password-reset/:token')
+  passwordResetPreview(@Param('token') token: string) {
+    return this.passwordReset.preview(token);
+  }
+
+  @Public()
+  @Throttle(STRICT_THROTTLE)
+  @Post('reset-password')
+  @HttpCode(204)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.passwordReset.reset(dto.token, dto.password);
   }
 
   @Public()

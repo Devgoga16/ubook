@@ -10,6 +10,7 @@ import { MailModule } from './core/mail/mail.module.js';
 import { StorageModule } from './core/storage/storage.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BookingsModule } from './modules/bookings/bookings.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
@@ -44,6 +45,7 @@ import { PlatformModule } from './modules/platform/platform.module.js';
     PlatformAdminModule,
     CatalogModule,
     ProfessionalsModule,
+    NotificationsModule,
     BookingsModule,
     RecordsModule,
     PaymentsModule,

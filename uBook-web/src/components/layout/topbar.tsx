@@ -1,8 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   ArrowLeftRight,
-  Bell,
-  BellOff,
   CircleUser,
   House,
   LogOut,
@@ -14,13 +12,13 @@ import {
   Sun,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
+import { NotificationsPanel } from '@/features/notifications/notifications-panel'
 import { useAccess } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { cn } from '@/lib/cn'
 import { useTheme, type ThemePreference } from '@/lib/theme'
 import { Kbd } from '../ui/badges'
 import { IconButton } from '../ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/overlays'
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; icon: typeof Sun }> = [
   { value: 'light', label: 'Claro', icon: Sun },
@@ -55,29 +53,6 @@ function ThemeMenu() {
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  )
-}
-
-/** Avisos de la app. Aún no hay notificaciones en tiempo real: el panel lo dice sin controles de más. */
-function NotificationsPanel() {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <IconButton aria-label="Notificaciones">
-          <Bell size={19} strokeWidth={1.7} />
-        </IconButton>
-      </PopoverTrigger>
-      <PopoverContent aria-label="Notificaciones">
-        <div className="mb-1 text-md font-semibold">Notificaciones</div>
-        <div className="flex flex-col items-center gap-2 px-2 py-6 text-center">
-          <span className="grid size-10 place-items-center rounded-full bg-surface-2 text-muted">
-            <BellOff size={18} aria-hidden />
-          </span>
-          <p className="m-0 text-sm font-semibold">Estás al día</p>
-          <p className="m-0 text-xs text-muted">Las reservas nuevas y los adelantos por validar aparecen en el Dashboard.</p>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 

@@ -8,6 +8,7 @@ import { AvailabilityPage } from '@/features/availability/availability-page'
 import { NAV_ITEMS } from '@/components/layout/nav'
 import { LoginPage } from '@/features/auth/login-page'
 import { NewOrganizationPage, OrganizationsPage } from '@/features/auth/organizations-page'
+import { ForgotPasswordPage, ResetPasswordPage } from '@/features/auth/password-reset-pages'
 import { RegisterPage } from '@/features/auth/register-page'
 import { DesignPage } from '@/features/design/design-page'
 import { LandingPage } from '@/features/landing/landing-page'
@@ -91,12 +92,17 @@ const DETAIL_ROUTES: Array<[path: string, parent: string, element: ReactNode]> =
 export const router = createBrowserRouter([
   {
     element: <PublicOnly />,
-    children: [{ path: '/login', element: <LoginPage /> }],
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/olvide-contrasena', element: <ForgotPasswordPage /> },
+    ],
   },
   // El registro maneja su propia redirección para poder mostrar el paso "Listo".
   { path: '/registro', element: <RegisterPage /> },
   // Pública: funciona con o sin sesión iniciada.
   { path: '/invitacion/:token', element: <AcceptInvitationPage /> },
+  // Funciona con o sin sesión: el enlace llega por correo.
+  { path: '/restablecer/:token', element: <ResetPasswordPage /> },
   // Landing siempre visible, también con sesión (en "/" solo se ve sin sesión).
   { path: '/inicio', element: <LandingPage /> },
   // Páginas del cliente final (sin cuenta).

@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import type { Env } from '../../config/env.js';
+import { PasswordResetService } from './password-reset.service.js';
+import { PasswordReset, PasswordResetSchema } from './schemas/password-reset.schema.js';
 import { Session, SessionSchema } from './schemas/session.schema.js';
 import { User, UserSchema } from './schemas/user.schema.js';
 import { SessionsService } from './sessions.service.js';
@@ -13,6 +15,7 @@ import { UsersService } from './users.service.js';
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Session.name, schema: SessionSchema },
+      { name: PasswordReset.name, schema: PasswordResetSchema },
     ]),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -23,7 +26,7 @@ import { UsersService } from './users.service.js';
       }),
     }),
   ],
-  providers: [UsersService, SessionsService],
-  exports: [UsersService, SessionsService, JwtModule],
+  providers: [UsersService, SessionsService, PasswordResetService],
+  exports: [UsersService, SessionsService, PasswordResetService, JwtModule],
 })
 export class IdentityModule {}

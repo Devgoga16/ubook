@@ -62,6 +62,11 @@ export class UsersService {
     return (await argon2.verify(user.passwordHash, password)) ? user : null;
   }
 
+  async setPassword(userId: string, password: string): Promise<void> {
+    const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+    await this.users.updateOne({ _id: userId }, { passwordHash }).exec();
+  }
+
   async touchLogin(userId: string): Promise<void> {
     await this.users.updateOne({ _id: userId }, { lastLoginAt: new Date() }).exec();
   }

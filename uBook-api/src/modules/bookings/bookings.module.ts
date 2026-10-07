@@ -10,6 +10,7 @@ import { Branch, BranchSchema } from '../organization/schemas/branch.schema.js';
 import { Organization, OrganizationSchema } from '../organization/schemas/organization.schema.js';
 import { Professional, ProfessionalSchema } from '../professionals/schemas/professional.schema.js';
 import { PlatformModule } from '../platform/platform.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PromotionsModule } from '../promotions/promotions.module.js';
 import { Resource, ResourceSchema } from '../resources/resource.schema.js';
 import { TimeOff, TimeOffSchema } from '../professionals/schemas/time-off.schema.js';
@@ -53,6 +54,7 @@ import { WaitlistService } from './waitlist.service.js';
     ]),
     PlatformModule,
     PromotionsModule,
+    NotificationsModule,
   ],
   controllers: [BookingsController, ClientsController, PublicBookingController, WaitlistController, AutomationsController],
   providers: [

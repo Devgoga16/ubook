@@ -20,7 +20,8 @@ type Values = z.infer<typeof schema>
 export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const from = (useLocation().state as { from?: string } | null)?.from
+  const state = useLocation().state as { from?: string; notice?: string } | null
+  const from = state?.from
   const [error, setError] = useState<string | null>(null)
   const {
     register,
@@ -46,6 +47,11 @@ export function LoginPage() {
           <p className="mt-1 mb-0 text-muted">Bienvenido de nuevo a uBook.</p>
         </div>
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3.5">
+          {state?.notice && !error && (
+            <div role="status" className="rounded-control bg-ok-bg px-3 py-2.5 text-sm font-semibold text-ok">
+              {state.notice}
+            </div>
+          )}
           <FormError message={error} />
           <Field label="Correo electrónico" error={errors.email?.message}>
             {(p) => <Input {...p} {...register('email')} type="email" autoComplete="email" autoFocus />}
@@ -53,6 +59,9 @@ export function LoginPage() {
           <Field label="Contraseña" error={errors.password?.message}>
             {(p) => <PasswordInput {...p} {...register('password')} autoComplete="current-password" />}
           </Field>
+          <Link to="/olvide-contrasena" className="-mt-1.5 self-end text-xs font-semibold text-brand hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
           <Button type="submit" variant="primary" disabled={isSubmitting} className="mt-1 py-2.5">
             {isSubmitting ? 'Ingresando…' : 'Ingresar'}
           </Button>

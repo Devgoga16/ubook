@@ -25,6 +25,27 @@ function layout(opts: { title: string; paragraphs: string[]; cta?: { label: stri
   </td></tr></table></body></html>`;
 }
 
+export function passwordResetEmail(opts: { to: string; firstName: string; url: string }): MailMessage {
+  return {
+    to: opts.to,
+    subject: 'Crea una contraseña nueva para uBook',
+    html: layout({
+      title: `Hola ${opts.firstName}, ¿olvidaste tu contraseña?`,
+      paragraphs: ['Recibimos un pedido para cambiar la contraseña de tu cuenta de uBook. Usa este botón para crear una nueva.'],
+      cta: { label: 'Crear contraseña nueva', url: opts.url },
+      footer: 'El enlace vence en 1 hora y sirve una sola vez. Si no lo pediste, ignora este correo: tu contraseña sigue igual.',
+    }),
+    text: [
+      `Hola ${opts.firstName},`,
+      '',
+      'Recibimos un pedido para cambiar la contraseña de tu cuenta de uBook.',
+      `Crea una nueva aquí: ${opts.url}`,
+      '',
+      'El enlace vence en 1 hora y sirve una sola vez. Si no lo pediste, ignora este correo: tu contraseña sigue igual.',
+    ].join('\n'),
+  };
+}
+
 export function invitationEmail(opts: {
   to: string;
   firstName: string;

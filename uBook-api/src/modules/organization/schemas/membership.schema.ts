@@ -21,6 +21,10 @@ export class Membership {
 
   @Prop({ type: String, enum: ['active', 'invited', 'suspended'], default: 'active' })
   status: MembershipStatus;
+
+  /** Hasta cuándo leyó los avisos de la campana. */
+  @Prop({ type: Date, default: null })
+  notificationsReadAt: Date | null;
 }
 
 export type MembershipDocument = HydratedDocument<Membership>;
