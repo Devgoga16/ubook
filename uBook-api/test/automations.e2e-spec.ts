@@ -66,7 +66,7 @@ describe('Automatizaciones', () => {
     const o = (await http().get('/api/automations').auth(s.owner.token, bearer).expect(200)).body;
     expect(o.flows.reminder).toMatchObject({ enabled: true, channels: ['email'], offset: 24 });
     expect(o.flows.review.enabled).toBe(false);
-    expect(o.channels).toMatchObject({ email: true, whatsapp: false });
+    expect(o.channels).toMatchObject({ email: true, whatsapp: true });
 
     expect((await s.flow('review', { enabled: true }).expect(400)).body.code).toBe('LINK_REQUIRED');
     expect((await s.flow('reminder', { message: 'Hola {{cliente.apellido}}' }).expect(400)).body.code).toBe('UNKNOWN_VARIABLE');
@@ -79,8 +79,8 @@ describe('Automatizaciones', () => {
     expect(mail.filter((m) => m.to === s.client.email).length).toBe(before);
   });
 
-  it('en el plan Business manda la confirmación también por WhatsApp con el texto del negocio', async () => {
-    const s = await setup('business');
+  it('manda la confirmación también por WhatsApp con el texto del negocio', async () => {
+    const s = await setup();
     await s.flow('confirmation', { channels: ['email', 'whatsapp'], message: '¡Hola {{cliente.nombre}}! Te esperamos el {{cita.fecha}} a las {{cita.hora}}.' }).expect(200);
     await s.book(at(nextMonday(), 10));
     const { wa, mail } = await boxes();

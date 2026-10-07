@@ -210,7 +210,7 @@ export const FAQS: Array<[question: string, answer: string]> = [
   ['¿Necesito tarjeta para la prueba gratis?', 'No. Tienes 30 días gratis con todas las funciones del plan que elijas, sin tarjeta. Te avisamos antes de que termine.'],
   ['¿Mis clientes tienen que descargar algo o crear una cuenta?', 'No. Reservan desde tu enlace en el navegador del celular. Reciben un enlace para ver, reprogramar o cancelar su cita cuando quieran.'],
   ['¿Cómo funcionan los adelantos con Yape o Plin?', 'Configuras tus datos de Yape, Plin o cuenta bancaria y el monto del adelanto. El cliente paga, sube la foto del comprobante y tú lo validas: al validarlo se registra el cobro y la cita se confirma.'],
-  ['¿Puedo enviar recordatorios por WhatsApp?', 'Sí. Todos los planes envían correos automáticos y el plan Business suma WhatsApp para recordatorios, confirmaciones, reseñas, cumpleaños y más.'],
+  ['¿Puedo enviar recordatorios por WhatsApp?', 'Sí, en todos los planes. Recordatorios, confirmaciones, reseñas, cumpleaños y más, por WhatsApp y por correo.'],
   ['¿Mi equipo puede ver toda la información del negocio?', 'Solo lo que tú decidas. Cada rol tiene permisos con alcance propio, por sede o de todo el negocio. Un profesional puede ver solo su agenda y sus clientes.'],
   ['¿Sirve si tengo varias sucursales?', 'Sí. Cada sede tiene su horario, feriados, equipo y agenda, y los reportes te permiten compararlas.'],
   ['¿Puedo cambiar de plan después?', 'Cuando quieras. Si pagas anual, obtienes 2 meses gratis.'],
@@ -236,14 +236,14 @@ const base: Record<FeatureKey, FeatureValue> = {
   audit_log: false,
   branding: true,
   white_label: false,
-  whatsapp: false,
+  whatsapp: true,
 }
 const pro = { ...base, max_branches: 3, max_professionals: 10, max_bookings_per_month: null, client_portal: true, guardians: true, resources: true, custom_roles: true, custom_fields: true, advanced_reports: true }
 
 export const FALLBACK_PLANS: Plan[] = [
   { id: 'starter', code: 'starter', name: 'Starter', description: 'Para profesionales independientes y negocios que empiezan.', sortOrder: 1, price: { monthly: 4900, yearly: 49000, currency: 'PEN' }, features: base },
   { id: 'pro', code: 'pro', name: 'Pro', description: 'Para negocios con equipo que quieren ofrecer una experiencia completa.', sortOrder: 2, price: { monthly: 7900, yearly: 79000, currency: 'PEN' }, features: pro },
-  { id: 'business', code: 'business', name: 'Business', description: 'Para negocios con varias sucursales y equipos grandes.', sortOrder: 3, price: { monthly: 12900, yearly: 129000, currency: 'PEN' }, features: { ...pro, max_branches: 5, max_professionals: null, branch_reports: true, audit_log: true, white_label: true, whatsapp: true } },
+  { id: 'business', code: 'business', name: 'Business', description: 'Para negocios con varias sucursales y equipos grandes.', sortOrder: 3, price: { monthly: 12900, yearly: 129000, currency: 'PEN' }, features: { ...pro, max_branches: 5, max_professionals: null, branch_reports: true, audit_log: true, white_label: true } },
 ]
 
 /** Filas de la tabla comparativa de planes. */

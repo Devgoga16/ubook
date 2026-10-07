@@ -111,7 +111,7 @@ function Editor({ flow, data }: { flow: FlowKey; data: AutomationsOverview }) {
               <Checkbox checked={draft.channels.includes('whatsapp')} disabled={!data.channels.whatsapp} onCheckedChange={(v) => channel('whatsapp', v === true)} />
               <MessageCircle size={14} aria-hidden /> WhatsApp
               {!data.channels.whatsapp ? (
-                <Tag tone="off">Plan Business</Tag>
+                <Tag tone="off">No incluido en tu plan</Tag>
               ) : wa.connected ? (
                 <Tag tone="ok">Conectado</Tag>
               ) : (

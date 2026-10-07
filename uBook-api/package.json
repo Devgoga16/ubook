@@ -25,6 +25,7 @@
     "db:fix-ids": "node scripts/migrate-string-ids.mjs",
     "db:upgrade-roles": "node scripts/upgrade-role-templates.mjs",
     "db:client-uniques": "node scripts/migrate-client-uniques.mjs",
+    "db:whatsapp-all-plans": "node scripts/enable-whatsapp-all-plans.mjs",
     "mail:test": "node scripts/send-test-mail.mjs",
     "r2:check": "node scripts/r2-check.mjs"
   },

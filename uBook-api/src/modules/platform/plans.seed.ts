@@ -37,7 +37,7 @@ export const DEFAULT_PLANS: Array<{
       audit_log: false,
       branding: true,
       white_label: false,
-      whatsapp: false,
+      whatsapp: true,
     },
   },
   {
@@ -64,7 +64,7 @@ export const DEFAULT_PLANS: Array<{
       audit_log: false,
       branding: true,
       white_label: false,
-      whatsapp: false,
+      whatsapp: true,
     },
   },
   {
