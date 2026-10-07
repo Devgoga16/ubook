@@ -61,13 +61,18 @@ export class PlansService {
     return plan.save();
   }
 
-  /** Inserta los planes por defecto que falten. No modifica los existentes. */
+  /**
+   * Inserta los planes por defecto que falten. No modifica los existentes, salvo
+   * los que aún tienen los precios iniciales en dólares: esos pasan a soles.
+   */
   async seedDefaults(): Promise<void> {
     for (const plan of DEFAULT_PLANS) {
       const result = await this.plans
         .updateOne({ code: plan.code }, { $setOnInsert: plan }, { upsert: true })
         .exec();
       if (result.upsertedCount) this.logger.log(`Plan "${plan.code}" creado`);
+      const migrated = await this.plans.updateOne({ code: plan.code, 'price.currency': 'USD' }, { $set: { price: plan.price } }).exec();
+      if (migrated.modifiedCount) this.logger.log(`Plan "${plan.code}" pasó a soles (S/ ${plan.price.monthly / 100} al mes)`);
     }
   }
 

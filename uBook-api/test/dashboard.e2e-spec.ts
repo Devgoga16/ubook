@@ -37,17 +37,18 @@ describe('Dashboard', () => {
       .send({ branchId: branch.id, days: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ weekday, intervals: [{ start: 0, end: 1440 }] })) })
       .expect(200);
     const client = (await http().post('/api/clients').auth(owner.token, bearer).send({ firstName: 'Ana', lastName: 'Ríos' }).expect(201)).body;
-    const book = async (hh: number) =>
+    const book = async (startsAt: string) =>
       (
         await http()
           .post('/api/appointments')
           .auth(owner.token, bearer)
-          .send({ branchId: branch.id, serviceId: service.id, professionalId: pro.id, clientId: client.id, startsAt: todayAt(hh) })
+          .send({ branchId: branch.id, serviceId: service.id, professionalId: pro.id, clientId: client.id, startsAt })
           .expect(201)
       ).body.id as string;
 
-    const done = await book(1);
-    const later = await book(23);
+    const done = await book(todayAt(1));
+    // Mañana a las 10: siempre es futura, sin importar la hora en que corra la prueba.
+    const later = await book(new Date(Date.parse(todayAt(10)) + 86_400_000).toISOString());
     const status = (id: string, s: string) => http().post(`/api/appointments/${id}/status`).auth(owner.token, bearer).send({ status: s }).expect(201);
     await status(done, 'checked_in');
     await status(done, 'completed');
@@ -55,11 +56,11 @@ describe('Dashboard', () => {
 
     const dash = (await http().get(`/api/dashboard?branchId=${branch.id}`).auth(owner.token, bearer).expect(200)).body;
     expect(dash.date).toBe(todayLima());
-    expect(dash.kpis.appointments).toMatchObject({ today: 2, lastWeek: 0 });
-    expect(dash.kpis.occupancy).toMatchObject({ bookedMinutes: 120, capacityMinutes: 1440, percent: 8 });
+    expect(dash.kpis.appointments).toMatchObject({ today: 1, lastWeek: 0 });
+    expect(dash.kpis.occupancy).toMatchObject({ bookedMinutes: 60, capacityMinutes: 1440, percent: 4 });
     expect(dash.kpis.revenue).toMatchObject({ collected: 0 });
     expect(dash.kpis.newClients.count).toBe(1);
-    expect(dash.professionals).toEqual([expect.objectContaining({ displayName: 'Luis', appointments: 2, percent: 8 })]);
+    expect(dash.professionals).toEqual([expect.objectContaining({ displayName: 'Luis', appointments: 1, percent: 4 })]);
     expect(dash.upcoming.map((u: { id: string }) => u.id)).toContain(later);
     expect(dash.attention.map((a: { kind: string }) => a.kind).sort()).toEqual(['pending', 'unpaid']);
 

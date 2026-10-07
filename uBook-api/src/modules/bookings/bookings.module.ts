@@ -24,6 +24,10 @@ import { PublicBookingService } from './public-booking.service.js';
 import { Appointment, AppointmentSchema } from './schemas/appointment.schema.js';
 import { Counter, CounterSchema } from './schemas/counter.schema.js';
 import { WaitlistEntry, WaitlistEntrySchema } from './schemas/waitlist.schema.js';
+import { AutomationSettings, AutomationSettingsSchema, NotificationLog, NotificationLogSchema } from './automations/automation.schemas.js';
+import { AutomationsController } from './automations/automations.controller.js';
+import { AutomationsService } from './automations/automations.service.js';
+import { User, UserSchema } from '../identity/schemas/user.schema.js';
 import { WaitlistController } from './waitlist.controller.js';
 import { WaitlistService } from './waitlist.service.js';
 
@@ -35,6 +39,9 @@ import { WaitlistService } from './waitlist.service.js';
       { name: Counter.name, schema: CounterSchema },
       { name: WaitlistEntry.name, schema: WaitlistEntrySchema },
       { name: Resource.name, schema: ResourceSchema },
+      { name: AutomationSettings.name, schema: AutomationSettingsSchema },
+      { name: NotificationLog.name, schema: NotificationLogSchema },
+      { name: User.name, schema: UserSchema },
       { name: Client.name, schema: ClientSchema },
       { name: Branch.name, schema: BranchSchema },
       { name: BranchException.name, schema: BranchExceptionSchema },
@@ -47,7 +54,7 @@ import { WaitlistService } from './waitlist.service.js';
     PlatformModule,
     PromotionsModule,
   ],
-  controllers: [BookingsController, ClientsController, PublicBookingController, WaitlistController],
+  controllers: [BookingsController, ClientsController, PublicBookingController, WaitlistController, AutomationsController],
   providers: [
     AvailabilityService,
     AppointmentsService,
@@ -57,6 +64,7 @@ import { WaitlistService } from './waitlist.service.js';
     BookingRemindersService,
     PublicBookingService,
     WaitlistService,
+    AutomationsService,
   ],
   exports: [AppointmentsService],
 })

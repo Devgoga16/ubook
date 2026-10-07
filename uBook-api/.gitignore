@@ -5,3 +5,7 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Archivos subidos en desarrollo (sin R2)
+.uploads/
+.uploads-test/

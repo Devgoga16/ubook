@@ -454,6 +454,15 @@ export interface Appointment {
   listPrice: number | null
   promotionCode: string | null
   resourceId: string | null
+  /** Adelanto de una reserva online. */
+  deposit: {
+    amount: number
+    status: DepositStatus
+    method: DepositMethod
+    reference?: string
+    submittedAt: string
+    rejectReason?: string
+  } | null
   history: Array<{ status: AppointmentStatusValue; at: string; note?: string }>
   client: { id: string; firstName: string; lastName: string; phone?: string } | null
 }
@@ -475,6 +484,16 @@ export interface ProfessionalSlots {
 
 /* ---------- Página pública de reservas ---------- */
 
+export interface DepositInfo {
+  yape: string
+  plin: string
+  bank: string
+  notes: string
+}
+
+export type DepositMethod = 'yape' | 'plin' | 'transfer' | 'other'
+export type DepositStatus = 'pending_review' | 'approved' | 'rejected'
+
 export interface PublicBusiness {
   name: string
   slug: string
@@ -488,7 +507,19 @@ export interface PublicBusiness {
   }
   branches: Array<{ id: string; name: string; address: string; reference: string; mapsUrl: string; phone: string; timezone: string }>
   categories: Array<{ id: string; name: string }>
-  services: Array<{ id: string; name: string; description: string; categoryId: string | null; durationMinutes: number; price: number; color: string }>
+  services: Array<{
+    id: string
+    name: string
+    description: string
+    categoryId: string | null
+    durationMinutes: number
+    price: number
+    color: string
+    /** Adelanto que pide el servicio para reservar online. */
+    deposit: { type: 'percent' | 'fixed'; value: number } | null
+  }>
+  /** A dónde pagar el adelanto. */
+  depositInfo: DepositInfo
   professionals: Array<{
     id: string
     displayName: string
@@ -527,6 +558,7 @@ export interface PublicBookingView {
   canReschedule: boolean
   lateCancellation: boolean
   freeCancellationHours: number | null
+  deposit: { amount: number; status: DepositStatus; rejectReason: string | null } | null
 }
 
 /* ---------- Cobros ---------- */

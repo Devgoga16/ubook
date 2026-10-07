@@ -51,6 +51,26 @@ export function usePaymentActions() {
   }
 }
 
+/** Validar o rechazar el adelanto que subió el cliente. */
+export function useDepositActions(appointmentId: string) {
+  const qc = useQueryClient()
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: paymentsKey })
+    void qc.invalidateQueries({ queryKey: appointmentsKey })
+    void qc.invalidateQueries({ queryKey: ['dashboard'] })
+  }
+  return {
+    approve: useMutation({
+      mutationFn: () => api(`/appointments/${appointmentId}/deposit/approve`, { method: 'POST' }),
+      onSuccess: refresh,
+    }),
+    reject: useMutation({
+      mutationFn: (reason: string) => api(`/appointments/${appointmentId}/deposit/reject`, { method: 'POST', body: { reason } }),
+      onSuccess: refresh,
+    }),
+  }
+}
+
 export function usePayments(p: { from: string; to: string; branchId?: string; professionalId?: string }) {
   const q = new URLSearchParams({ from: p.from, to: p.to, ...(p.branchId && { branchId: p.branchId }), ...(p.professionalId && { professionalId: p.professionalId }) })
   return useQuery({

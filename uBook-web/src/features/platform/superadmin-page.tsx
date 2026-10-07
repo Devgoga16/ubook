@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Building2, CircleAlert, Clock, Search } from 'lucide-react'
 import { useDeferredValue, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { Avatar } from '@/components/ui/avatar'
 import { Tag, type TagTone } from '@/components/ui/badges'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ function statusLabel(org: PlatformOrganization): { label: string; tone: TagTone 
 
 /** Negocios de la plataforma (equipo Unify Tec). */
 export function SuperadminPage() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const deferredSearch = useDeferredValue(search.trim())
@@ -120,11 +122,13 @@ export function SuperadminPage() {
                 {items.map((org) => {
                   const status = statusLabel(org)
                   return (
-                    <Tr key={org.id}>
+                    <Tr key={org.id} onClick={() => navigate(`/superadmin/negocios/${org.id}`)}>
                       <Td>
                         <div className="flex items-center gap-2.5 font-semibold">
                           <Avatar name={org.name} size="xs" />
-                          {org.name}
+                          <Link to={`/superadmin/negocios/${org.id}`} className="text-ink hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {org.name}
+                          </Link>
                         </div>
                       </Td>
                       <Td>{BUSINESS_TYPES.find((t) => t.key === org.businessType)?.label ?? '—'}</Td>

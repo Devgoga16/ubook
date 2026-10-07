@@ -190,8 +190,23 @@ export class DashboardService {
     const items: Array<{ kind: string; title: string; detail: string; appointmentId?: string; count?: number }> = [];
     const proFilter = ctx.mine ? { professionalId: { $in: ctx.mine } } : {};
 
+    const deposits = await this.appointments
+      .find({ branchId: ctx.branchId, 'deposit.status': 'pending_review', status: 'pending', ...proFilter })
+      .sort({ startsAt: 1 })
+      .limit(20)
+      .exec();
+    if (deposits.length) {
+      items.push({
+        kind: 'deposit',
+        title: deposits.length === 1 ? '1 adelanto por validar' : `${deposits.length} adelantos por validar`,
+        detail: 'Revisa la foto del comprobante y confirma la cita.',
+        appointmentId: deposits[0]!.id as string,
+        count: deposits.length,
+      });
+    }
+
     const pending = await this.appointments
-      .find({ branchId: ctx.branchId, status: 'pending', startsAt: { $gt: new Date() }, ...proFilter })
+      .find({ branchId: ctx.branchId, status: 'pending', 'deposit.status': { $ne: 'pending_review' }, startsAt: { $gt: new Date() }, ...proFilter })
       .sort({ startsAt: 1 })
       .limit(20)
       .exec();

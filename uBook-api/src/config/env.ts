@@ -91,6 +91,38 @@ export class Env {
   @IsOptional()
   @IsString()
   BILLING_CONTACT?: string;
+
+  /** API de WhatsApp de Unify. Sin API key, los mensajes se muestran en la consola. */
+  @IsString()
+  WHATSAPP_API_URL = 'https://api-ws-unify.rapi-almacen.shop/api';
+
+  @IsOptional()
+  @IsString()
+  WHATSAPP_SESSION?: string;
+
+  @IsOptional()
+  @IsString()
+  WHATSAPP_API_KEY?: string;
+
+  /** Cloudflare R2 (bucket privado) para comprobantes. Sin esto, se guardan en LOCAL_UPLOADS_DIR. */
+  @IsOptional()
+  @IsString()
+  R2_ACCOUNT_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  R2_ACCESS_KEY_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  R2_SECRET_ACCESS_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  R2_BUCKET?: string;
+
+  @IsString()
+  LOCAL_UPLOADS_DIR = '.uploads';
 }
 
 export function validateEnv(config: Record<string, unknown>): Env {

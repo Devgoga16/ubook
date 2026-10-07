@@ -4,27 +4,62 @@
     {
       "name": "ubook-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "uBook-web", "dev"],
+      "runtimeArgs": [
+        "--dir",
+        "uBook-web",
+        "dev"
+      ],
       "port": 5173
     },
     {
       "name": "ubook-api",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "uBook-api", "dev:memory"],
+      "runtimeArgs": [
+        "--dir",
+        "uBook-api",
+        "dev:memory"
+      ],
       "port": 3000
     },
     {
       "name": "ubook-api-test",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "uBook-api", "dev:memory", "--once"],
-      "env": { "PORT": "3100", "APP_URL": "http://localhost:5180" },
+      "runtimeArgs": [
+        "--dir",
+        "uBook-api",
+        "dev:memory",
+        "--once"
+      ],
+      "env": {
+        "PORT": "3100",
+        "APP_URL": "http://localhost:5180",
+        "WHATSAPP_API_KEY": "",
+        "WHATSAPP_SESSION": "",
+        "R2_ACCOUNT_ID": "",
+        "R2_ACCESS_KEY_ID": "",
+        "R2_SECRET_ACCESS_KEY": "",
+        "R2_BUCKET": "",
+        "LOCAL_UPLOADS_DIR": ".uploads-test",
+        "SUPERADMIN_EMAIL": "root@pruebas.test",
+        "SUPERADMIN_PASSWORD": "RootPruebas2026x"
+      },
       "port": 3100
     },
     {
       "name": "ubook-web-test",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "uBook-web", "exec", "vite", "--port", "5180", "--strictPort"],
-      "env": { "API_TARGET": "http://localhost:3100" },
+      "runtimeArgs": [
+        "--dir",
+        "uBook-web",
+        "exec",
+        "vite",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "env": {
+        "API_TARGET": "http://localhost:3100"
+      },
       "port": 5180
     }
   ]

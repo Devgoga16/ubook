@@ -31,6 +31,24 @@ export class PaymentsController {
     return this.payments.create(id, dto);
   }
 
+  @RequirePermission('booking.read')
+  @Get('appointments/:id/deposit/proof')
+  depositProof(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.payments.depositProof(id);
+  }
+
+  @RequirePermission('payment.create')
+  @Post('appointments/:id/deposit/approve')
+  approveDeposit(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.payments.approveDeposit(id);
+  }
+
+  @RequirePermission('payment.create')
+  @Post('appointments/:id/deposit/reject')
+  rejectDeposit(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: VoidPaymentDto) {
+    return this.payments.rejectDeposit(id, dto.reason);
+  }
+
   @RequirePermission('payment.void')
   @Post('payments/:id/void')
   void(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: VoidPaymentDto) {

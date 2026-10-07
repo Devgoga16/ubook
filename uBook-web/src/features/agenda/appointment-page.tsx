@@ -41,6 +41,7 @@ import type { Appointment, AppointmentStatusValue } from '@/lib/api/types'
 import { useAccess } from '@/lib/auth/access'
 import { cn } from '@/lib/cn'
 import { formatCents } from '@/lib/format'
+import { DepositSection } from '@/features/payments/deposit-section'
 import { PaymentSection } from '@/features/payments/payment-section'
 import { useResources } from '@/features/resources/api'
 import { usePageMeta } from '@/lib/page-meta'
@@ -518,6 +519,8 @@ export function AppointmentPage() {
               />
             )}
           </Section>
+
+          <DepositSection a={a} />
 
           <PaymentSection a={a} />
 

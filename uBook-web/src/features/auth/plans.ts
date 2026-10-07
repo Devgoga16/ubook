@@ -35,9 +35,9 @@ export function usePlans() {
   return useQuery({ queryKey: plansQueryKey, queryFn: () => api<Plan[]>('/plans'), staleTime: 5 * 60_000 })
 }
 
-const usd = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 })
+const whole = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2 })
 
-/** 8900 (centavos) → "US$ 89", como en el prototipo. */
-export function formatUsd(cents: number): string {
-  return `US$ ${usd.format(cents / 100)}`
+/** Precio de un plan: 4900 (céntimos) → "S/ 49". */
+export function formatPlanPrice(cents: number, currency = 'PEN'): string {
+  return `${currency === 'USD' ? 'US$' : 'S/'} ${whole.format(cents / 100)}`
 }

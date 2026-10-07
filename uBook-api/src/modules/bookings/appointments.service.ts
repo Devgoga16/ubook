@@ -13,6 +13,7 @@ import { Professional } from '../professionals/schemas/professional.schema.js';
 import { blockedRange } from './availability.engine.js';
 import { AvailabilityService } from './availability.service.js';
 import { BookingMailerService } from './booking-mailer.service.js';
+import { AutomationsService } from './automations/automations.service.js';
 import { discountFor, type AppliedPromotion } from '../promotions/promotions.service.js';
 import type { CreateAppointmentDto, ListAppointmentsQuery } from './dto/booking.dto.js';
 import {
@@ -20,6 +21,7 @@ import {
   Appointment,
   type AppointmentDocument,
   type AppointmentStatus,
+  type DepositMethod,
 } from './schemas/appointment.schema.js';
 import { Counter } from './schemas/counter.schema.js';
 import { Resource } from '../resources/resource.schema.js';
@@ -45,6 +47,7 @@ export interface AppointmentView {
   listPrice: number | null;
   promotionCode: string | null;
   resourceId: string | null;
+  deposit: { amount: number; status: 'pending_review' | 'approved' | 'rejected'; method: DepositMethod; reference?: string; submittedAt: Date; rejectReason?: string } | null;
   history: Array<{ status: AppointmentStatus; at: Date; note?: string }>;
   client: { id: string; firstName: string; lastName: string; phone?: string } | null;
 }
@@ -61,6 +64,7 @@ export class AppointmentsService {
     @InjectModel(Resource.name) private readonly resources: Model<Resource>,
     private readonly availability: AvailabilityService,
     private readonly mailer: BookingMailerService,
+    private readonly automations: AutomationsService,
     private readonly audit: AuditService,
   ) {}
 
@@ -153,11 +157,21 @@ export class AppointmentsService {
     status: 'pending' | 'confirmed';
     notes?: string;
     promotion?: AppliedPromotion;
+    deposit?: { type: 'percent' | 'fixed'; value: number; proofKey: string; method: DepositMethod; reference?: string };
   }): Promise<AppointmentDocument> {
     const created = await this.connection.transaction(async (session) => {
       const { service, terms, resourceId } = await this.reserveSlot(session, input, true);
       const number = await this.nextNumber(session);
       const block = blockedRange(input.startsAt, terms.durationMinutes, service.bufferBeforeMinutes, service.bufferAfterMinutes);
+      const price = terms.price - (input.promotion ? discountFor(input.promotion, terms.price) : 0);
+      // Adelanto sobre el precio final (con cupón); queda por validar.
+      const depositAmount =
+        input.deposit && price > 0
+          ? input.deposit.type === 'percent'
+            ? Math.max(1, Math.round((price * input.deposit.value) / 100))
+            : Math.min(input.deposit.value, price)
+          : 0;
+      const status = depositAmount ? 'pending' : input.status;
       const [doc] = await this.appointments.create(
         [
           {
@@ -166,19 +180,29 @@ export class AppointmentsService {
             professionalId: input.professionalId,
             serviceId: input.serviceId,
             clientId: input.clientId,
+            ...(depositAmount && {
+              deposit: {
+                amount: depositAmount,
+                status: 'pending_review',
+                proofKey: input.deposit!.proofKey,
+                method: input.deposit!.method,
+                reference: input.deposit!.reference,
+                submittedAt: new Date(),
+              },
+            }),
             startsAt: input.startsAt,
             endsAt: new Date(input.startsAt.getTime() + terms.durationMinutes * 60_000),
             blockedFrom: block.start,
             blockedUntil: block.end,
             resourceId,
-            status: input.status,
+            status,
             serviceName: service.name,
-            price: terms.price - (input.promotion ? discountFor(input.promotion, terms.price) : 0),
+            price,
             ...(input.promotion && { listPrice: terms.price, promotionId: input.promotion.id, promotionCode: input.promotion.code }),
             durationMinutes: terms.durationMinutes,
             channel: 'online',
             notes: input.notes,
-            history: [{ status: input.status, at: new Date(), note: 'Reservada en la página online' }],
+            history: [{ status, at: new Date(), note: depositAmount ? 'Reservada online · adelanto por validar' : 'Reservada en la página online' }],
           },
         ],
         { session },
@@ -191,7 +215,7 @@ export class AppointmentsService {
       entityId: created.id as string,
       metadata: { channel: 'online' },
     });
-    await this.mailer.notify(input.status === 'pending' ? 'pending' : 'confirmed', created.id as string);
+    await this.mailer.notify(created.status === 'pending' ? 'pending' : 'confirmed', created.id as string);
     return created;
   }
 
@@ -244,6 +268,7 @@ export class AppointmentsService {
     await this.audit.log({ action: `appointment.${status}`, entityType: 'Appointment', entityId: id });
     if (from === 'pending' && status === 'confirmed') await this.mailer.notify('approved', id);
     if (status === 'cancelled') await this.mailer.notify(by === 'client' ? 'cancelled' : 'cancelled_by_business', id);
+    if (status === 'no_show') await this.automations.dispatch('noShow', { appointmentId: id }).catch(() => 0);
     return this.get(id);
   }
 
@@ -510,6 +535,9 @@ export class AppointmentsService {
         listPrice: d.listPrice ?? null,
         promotionCode: d.promotionCode ?? null,
         resourceId: d.resourceId?.toString() ?? null,
+        deposit: d.deposit
+          ? { amount: d.deposit.amount, status: d.deposit.status, method: d.deposit.method, reference: d.deposit.reference, submittedAt: d.deposit.submittedAt, rejectReason: d.deposit.rejectReason }
+          : null,
         history: d.history.map((h) => ({ status: h.status, at: h.at, note: h.note })),
         client: c ? { id: c.id as string, firstName: c.firstName, lastName: c.lastName, phone: c.phone } : null,
       };

@@ -27,6 +27,8 @@ import { PromotionFormPage } from '@/features/promotions/promotion-form-page'
 import { PromotionsPage } from '@/features/promotions/promotions-page'
 import { ResourceFormPage } from '@/features/resources/resource-form-page'
 import { ResourcesPage } from '@/features/resources/resources-page'
+import { AutomationsPage } from '@/features/automations/automations-page'
+import { OrganizationDetailPage } from '@/features/platform/organization-detail-page'
 import { ComingSoon } from '@/features/placeholder/coming-soon'
 import { SuperadminPage } from '@/features/platform/superadmin-page'
 import { NewProfessionalPage } from '@/features/professionals/new-professional-page'
@@ -61,6 +63,7 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/lista-espera': () => <WaitlistPage />,
   '/promociones': () => <PromotionsPage />,
   '/recursos': () => <ResourcesPage />,
+  '/automatizaciones': () => <AutomationsPage />,
 }
 
 /** Páginas hijas: heredan el permiso del ítem del menú padre. */
@@ -78,6 +81,7 @@ const DETAIL_ROUTES: Array<[path: string, parent: string, element: ReactNode]> =
   ['/lista-espera/nueva', '/lista-espera', <NewWaitlistPage />],
   ['/promociones/:id', '/promociones', <PromotionFormPage />],
   ['/recursos/:id', '/recursos', <ResourceFormPage />],
+  ['/superadmin/negocios/:id', '/superadmin', <OrganizationDetailPage />],
   ['/equipo/:id', '/equipo', <MemberPage />],
 ]
 

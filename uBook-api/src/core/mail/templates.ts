@@ -185,3 +185,15 @@ export function waitlistEmail(d: {
     ].join('\n'),
   };
 }
+
+/** Mensaje libre de un negocio (automatizaciones): el texto ya viene armado con sus variables. */
+export function messageEmail(d: { to: string; subject: string; organizationName: string; text: string; cta?: { label: string; url: string } }): MailMessage {
+  // Los enlaces del texto se muestran en el botón; en el cuerpo se quitan para que se lea limpio.
+  const body = d.cta ? d.text.replace(d.cta.url, '').replace(/[:\s]+$/, '.') : d.text;
+  return {
+    to: d.to,
+    subject: `${d.subject} · ${d.organizationName}`,
+    html: layout({ title: d.subject, paragraphs: [escape(body)], cta: d.cta, footer: `${escape(d.organizationName)} · Enviado con uBook.` }),
+    text: [d.text, '', d.organizationName].join('\n'),
+  };
+}

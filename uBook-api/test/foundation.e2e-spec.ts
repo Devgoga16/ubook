@@ -29,7 +29,7 @@ describe('Planes', () => {
     const res = await http().get('/api/plans').expect(200);
     expect(res.body.map((p: { code: string }) => p.code)).toEqual(['starter', 'pro', 'business']);
     expect(res.body[0].features.client_records).toBe(true);
-    expect(res.body[1].price).toEqual({ monthly: 8900, yearly: 89000, currency: 'USD' });
+    expect(res.body[1].price).toEqual({ monthly: 7900, yearly: 79000, currency: 'PEN' });
     expect(res.body[0].id).toBeDefined();
     expect(res.body[0]._id).toBeUndefined();
   });
@@ -336,5 +336,21 @@ describe('Super admin', () => {
       .auth(admin, { type: 'bearer' })
       .send({ features: { max_professionals: 'muchos' } })
       .expect(400);
+  });
+});
+
+describe('Planes en soles', () => {
+  it('pasa a soles los planes que aún tienen los precios iniciales en dólares', async () => {
+    const { PlansService } = await import('../src/modules/platform/plans.service.js');
+    const { getConnectionToken } = await import('@nestjs/mongoose');
+    const db = ctx.app.get(getConnectionToken()).db;
+    await db.collection('plans').updateOne({ code: 'starter' }, { $set: { price: { monthly: 2900, yearly: 29000, currency: 'USD' } } });
+    await ctx.app.get(PlansService).seedDefaults();
+    const res = await request(ctx.app.getHttpServer()).get('/api/plans').expect(200);
+    expect(res.body.map((p: { code: string; price: unknown }) => [p.code, p.price])).toEqual([
+      ['starter', { monthly: 4900, yearly: 49000, currency: 'PEN' }],
+      ['pro', { monthly: 7900, yearly: 79000, currency: 'PEN' }],
+      ['business', { monthly: 12900, yearly: 129000, currency: 'PEN' }],
+    ]);
   });
 });

@@ -7,6 +7,7 @@ import { validateEnv } from './config/env.js';
 import { AuditModule } from './core/audit/audit.module.js';
 import { DatabaseModule } from './core/database/database.module.js';
 import { MailModule } from './core/mail/mail.module.js';
+import { StorageModule } from './core/storage/storage.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BookingsModule } from './modules/bookings/bookings.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
@@ -35,6 +36,7 @@ import { PlatformModule } from './modules/platform/platform.module.js';
     DatabaseModule,
     AuditModule,
     MailModule,
+    StorageModule,
     IdentityModule,
     PlatformModule,
     OrganizationModule,

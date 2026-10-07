@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Segmented } from '@/components/ui/controls'
 import { Skeleton } from '@/components/ui/display'
 import { cn } from '@/lib/cn'
-import { formatUsd, planHighlights, usePlans } from './plans'
+import { formatPlanPrice, planHighlights, usePlans } from './plans'
 
 
 /** Tarjetas de planes para elegir con cuál empieza la prueba gratis. */
@@ -53,7 +53,7 @@ export function PlanPicker({ value, onChange }: { value: string; onChange: (code
                 <div className="mt-0.5 text-xs text-muted">{plan.description}</div>
               </div>
               <div className="tabular">
-                <span className="text-2xl font-semibold">{formatUsd(price)}</span>
+                <span className="text-2xl font-semibold">{formatPlanPrice(price, plan.price.currency)}</span>
                 <span className="text-xs text-muted"> / {cycle === 'monthly' ? 'mes' : 'año'}</span>
               </div>
               <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-xs">

@@ -26,6 +26,8 @@ export interface SubscriptionPayment {
   note: string
   status: 'pending' | 'approved' | 'rejected'
   rejectReason: string | null
+  /** Tiene foto del comprobante. */
+  hasProof: boolean
   periodEnd: string | null
   createdAt: string
   organization?: { id: string; name: string; slug: string } | null
@@ -45,10 +47,17 @@ export function useBilling(enabled = true) {
 export function useReportPayment() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: Omit<SubscriptionPayment, 'id' | 'organizationId' | 'status' | 'rejectReason' | 'periodEnd' | 'createdAt' | 'organization'>) =>
+    mutationFn: (body: Omit<SubscriptionPayment, 'id' | 'organizationId' | 'status' | 'rejectReason' | 'hasProof' | 'periodEnd' | 'createdAt' | 'organization'> & { proofKey: string }) =>
       api<SubscriptionPayment>('/billing/payments', { method: 'POST', body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['billing'] }),
   })
+}
+
+/** Sube la foto del comprobante; devuelve la clave para registrar el pago. */
+export function uploadBillingProof(file: File): Promise<string> {
+  const body = new FormData()
+  body.append('file', file)
+  return api<{ key: string }>('/billing/proof', { method: 'POST', body }).then((r) => r.key)
 }
 
 export function usePlatformPayments(status: 'pending' | 'approved' | 'rejected') {
@@ -68,4 +77,5 @@ export function usePlatformReview() {
 }
 
 /** Monto en céntimos con su moneda: "S/ 330.00" o "US$ 89.00". */
-export const money = (cents: number, currency: string) => `${currency === 'USD' ? 'US$' : 'S/'} ${(cents / 100).toFixed(2)}`
+export const money = (cents: number, currency: string) =>
+  `${currency === 'USD' ? 'US$' : 'S/'} ${(cents / 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

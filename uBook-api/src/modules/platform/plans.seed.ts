@@ -3,9 +3,7 @@ import type { FeatureSet } from './features.catalog.js';
 /**
  * Planes iniciales (nombres y precios mensuales del prototipo). Solo se
  * insertan si no existen; después se editan desde el panel de super admin.
- * Montos en centavos de USD.
- *
- * TODO(precios): el anual es provisional (10 meses = 2 meses gratis).
+ * Montos en céntimos de sol (PEN). El anual cobra 10 meses (2 meses gratis).
  */
 export const DEFAULT_PLANS: Array<{
   code: string;
@@ -20,7 +18,7 @@ export const DEFAULT_PLANS: Array<{
     name: 'Starter',
     description: 'Para profesionales independientes y negocios que empiezan.',
     sortOrder: 1,
-    price: { monthly: 2900, yearly: 29000, currency: 'USD' },
+    price: { monthly: 4900, yearly: 49000, currency: 'PEN' },
     features: {
       max_branches: 1,
       max_professionals: 2,
@@ -47,7 +45,7 @@ export const DEFAULT_PLANS: Array<{
     name: 'Pro',
     description: 'Para negocios con equipo que quieren ofrecer una experiencia completa.',
     sortOrder: 2,
-    price: { monthly: 8900, yearly: 89000, currency: 'USD' },
+    price: { monthly: 7900, yearly: 79000, currency: 'PEN' },
     features: {
       max_branches: 3,
       max_professionals: 10,
@@ -74,7 +72,7 @@ export const DEFAULT_PLANS: Array<{
     name: 'Business',
     description: 'Para negocios con varias sucursales y equipos grandes.',
     sortOrder: 3,
-    price: { monthly: 24900, yearly: 249000, currency: 'USD' },
+    price: { monthly: 12900, yearly: 129000, currency: 'PEN' },
     features: {
       max_branches: 5,
       max_professionals: null,

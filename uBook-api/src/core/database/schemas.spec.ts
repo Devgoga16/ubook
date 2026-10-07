@@ -20,6 +20,7 @@ import { WaitlistEntrySchema } from '../../modules/bookings/schemas/waitlist.sch
 import { PromotionSchema } from '../../modules/promotions/promotion.schema.js';
 import { ResourceSchema } from '../../modules/resources/resource.schema.js';
 import { SubscriptionPaymentSchema } from '../../modules/platform/schemas/subscription-payment.schema.js';
+import { AutomationSettingsSchema, NotificationLogSchema } from '../../modules/bookings/automations/automation.schemas.js';
 import { PlanSchema } from '../../modules/platform/schemas/plan.schema.js';
 import { SubscriptionSchema } from '../../modules/platform/schemas/subscription.schema.js';
 
@@ -50,6 +51,8 @@ const SCHEMAS: Record<string, Schema> = {
   PromotionSchema,
   ResourceSchema,
   SubscriptionPaymentSchema,
+  AutomationSettingsSchema,
+  NotificationLogSchema,
 };
 
 /** Referencias que intencionalmente no son ObjectId. */

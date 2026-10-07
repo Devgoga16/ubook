@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, CalendarCheck, CalendarDays, CircleDollarSign, Gauge, Hourglass, Lock, Plus, UserPlus, UserX, Users, Wallet } from 'lucide-react'
+import { AlertCircle, CalendarCheck, CalendarDays, CircleDollarSign, Gauge, Hourglass, Lock, Plus, Receipt, UserPlus, UserX, Users, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Avatar } from '@/components/ui/avatar'
@@ -41,7 +41,7 @@ interface Dashboard {
     professionalColor: string | null
   }>
   professionals: Array<{ professionalId: string; displayName: string; color: string; appointments: number; bookedMinutes: number; capacityMinutes: number; percent: number | null }>
-  attention: Array<{ kind: 'pending' | 'unpaid' | 'cash' | 'setup'; title: string; detail: string; appointmentId?: string; count?: number }>
+  attention: Array<{ kind: 'deposit' | 'pending' | 'unpaid' | 'cash' | 'setup'; title: string; detail: string; appointmentId?: string; count?: number }>
 }
 
 const WEEKDAY_NAME = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
@@ -57,6 +57,7 @@ function greeting(): string {
 }
 
 const ATTENTION = {
+  deposit: { icon: Receipt, tone: 'bg-warn-bg text-warn', action: 'Validar' },
   pending: { icon: Hourglass, tone: 'bg-warn-bg text-warn', action: 'Revisar' },
   unpaid: { icon: Wallet, tone: 'bg-bad-bg text-bad', action: 'Cobrar' },
   cash: { icon: Lock, tone: 'bg-info-bg text-info', action: 'Ir a caja' },

@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDate,
   IsEmail,
+  IsIn,
   IsMongoId,
   IsOptional,
   IsString,
@@ -73,6 +74,22 @@ export class PublicClientDto {
   email?: string;
 }
 
+export class DepositSubmissionDto {
+  /** Clave que devolvió la subida del comprobante. */
+  @IsString()
+  @MaxLength(200)
+  proofKey: string;
+
+  @IsIn(['yape', 'plin', 'transfer', 'other'])
+  method: 'yape' | 'plin' | 'transfer' | 'other';
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(60)
+  reference?: string;
+}
+
 export class PublicBookingDto {
   @IsMongoId()
   branchId: string;
@@ -113,6 +130,12 @@ export class PublicBookingDto {
   @IsString()
   @MaxLength(24)
   promoCode?: string;
+
+  /** Obligatorio si el servicio pide adelanto. */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DepositSubmissionDto)
+  deposit?: DepositSubmissionDto;
 }
 
 export class PromoQuery {

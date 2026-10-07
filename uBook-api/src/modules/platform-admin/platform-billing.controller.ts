@@ -32,6 +32,12 @@ export class PlatformBillingController {
     return this.billing.listForPlatform(q.status);
   }
 
+  @PlatformOnly('super_admin', 'support')
+  @Get('payments/:id/proof')
+  proof(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.billing.proofUrl(id);
+  }
+
   @PlatformOnly('super_admin')
   @Post('payments/:id/approve')
   approve(@Param('id', ParseObjectIdPipe) id: string, @CurrentActor() actor: Actor) {

@@ -204,3 +204,54 @@ describe('Cupones', () => {
     expect(list.find((p: { code: string }) => p.code === 'LUNES20')).toMatchObject({ uses: 1, discountGiven: 600 });
   });
 });
+
+describe('Adelantos', () => {
+  const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
+  const listDay = (s: Setup) =>
+    http().get(`/api/appointments?branchId=${s.branchId}&from=${at(s.date, 0)}&to=${at(s.date, 23)}`).auth(s.owner.token, bearer).expect(200);
+
+  it('exige el comprobante, deja la cita por validar y al aprobar registra el cobro y confirma', async () => {
+    const s = await setup();
+    await http().patch(`/api/services/${s.serviceId}`).auth(s.owner.token, bearer).send({ deposit: { enabled: true, type: 'percent', value: 50 } }).expect(200);
+    await http().patch('/api/organization').auth(s.owner.token, bearer).send({ depositInfo: { yape: '987 654 321 · Barbería', notes: 'Envía la captura' } }).expect(200);
+    const info = (await http().get(`/api/public/businesses/${s.slug}`).expect(200)).body;
+    expect(info.services.find((x: { id: string }) => x.id === s.serviceId).deposit).toEqual({ type: 'percent', value: 50 });
+    expect(JSON.stringify(info)).toContain('987 654 321');
+
+    expect((await book(s, at(s.date, 9)).expect(400)).body.code).toBe('DEPOSIT_REQUIRED');
+    expect((await http().post(`/api/public/businesses/${s.slug}/uploads`).attach('file', Buffer.from('texto'), 'x.png').expect(400)).body.code).toBe('INVALID_IMAGE');
+    const { key } = (await http().post(`/api/public/businesses/${s.slug}/uploads`).attach('file', PNG, 'yape.png').expect(201)).body;
+    expect((await book(s, at(s.date, 9), { deposit: { proofKey: 'deposits/otro/x.png', method: 'yape' } }).expect(400)).body.code).toBe('INVALID_PROOF');
+
+    await book(s, at(s.date, 9), { deposit: { proofKey: key, method: 'yape', reference: 'OP-777' } }).expect(201);
+    const [appt] = (await listDay(s)).body;
+    expect(appt.status).toBe('pending');
+    expect(appt.deposit).toMatchObject({ amount: 1500, status: 'pending_review', method: 'yape', reference: 'OP-777' });
+    const { url } = (await http().get(`/api/appointments/${appt.id}/deposit/proof`).auth(s.owner.token, bearer).expect(200)).body;
+    await http().get(url).expect(200);
+
+    const attention = (await http().get(`/api/dashboard?branchId=${s.branchId}`).auth(s.owner.token, bearer)).body;
+    if (attention?.attention) expect(attention.attention.some((a: { kind: string }) => a.kind === 'deposit')).toBe(true);
+
+    const approved = (await http().post(`/api/appointments/${appt.id}/deposit/approve`).auth(s.owner.token, bearer).expect(201)).body;
+    expect(approved.status).toBe('confirmed');
+    expect(approved.deposit.status).toBe('approved');
+    const payments = (await http().get(`/api/appointments/${appt.id}/payments`).auth(s.owner.token, bearer).expect(200)).body;
+    expect(JSON.stringify(payments)).toContain('OP-777');
+    await http().post(`/api/appointments/${appt.id}/deposit/approve`).auth(s.owner.token, bearer).expect(400);
+  });
+
+  it('rechazar el adelanto cancela la cita y libera el horario', async () => {
+    const s = await setup();
+    await http().patch(`/api/services/${s.serviceId}`).auth(s.owner.token, bearer).send({ deposit: { enabled: true, type: 'fixed', value: 1000 } }).expect(200);
+    const { key } = (await http().post(`/api/public/businesses/${s.slug}/uploads`).attach('file', PNG, 'yape.png').expect(201)).body;
+    await book(s, at(s.date, 10), { professionalId: s.pros[0], deposit: { proofKey: key, method: 'plin' } }).expect(201);
+    const [appt] = (await listDay(s)).body;
+    expect(appt.deposit.amount).toBe(1000);
+    const rejected = (await http().post(`/api/appointments/${appt.id}/deposit/reject`).auth(s.owner.token, bearer).send({ reason: 'No se lee' }).expect(201)).body;
+    expect(rejected.status).toBe('cancelled');
+    expect(rejected.deposit).toMatchObject({ status: 'rejected', rejectReason: 'No se lee' });
+    // El horario vuelve a estar libre.
+    await book(s, at(s.date, 10), { professionalId: s.pros[0], client: client({ email: 'otra@cliente.test', phone: '912 345 678' }), deposit: { proofKey: key, method: 'yape' } }).expect(201);
+  });
+});

@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { PartialType, PickType } from '@nestjs/swagger';
 import {
   IsBoolean,
@@ -9,6 +10,7 @@ import {
   Matches,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 
 export class CreateOrganizationDto {
@@ -46,9 +48,37 @@ export class CreateOrganizationDto {
   ownerAttends?: boolean;
 }
 
+export class DepositInfoDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  yape?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  plin?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(240)
+  bank?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  notes?: string;
+}
+
 export class UpdateOrganizationDto extends PartialType(
   PickType(CreateOrganizationDto, ['name', 'timezone', 'country', 'currency', 'businessType'] as const),
 ) {
+  /** Datos para que el cliente pague el adelanto. */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DepositInfoDto)
+  depositInfo?: DepositInfoDto;
+
   @IsOptional()
   @Matches(/^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$/, {
     message: 'El slug solo admite minúsculas, números y guiones',

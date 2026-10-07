@@ -83,17 +83,19 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipRefresh, headers, ...init } = options
 
+  // FormData (subida de archivos): el navegador pone el Content-Type con su boundary.
+  const isForm = body instanceof FormData
   const send = () =>
     fetch(`${BASE_URL}${path}`, {
       ...init,
       credentials: 'include',
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
         ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
     })
 
   let res: Response
@@ -116,6 +118,11 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (!res.ok) throw await parseError(res)
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
+}
+
+/** Enlace de un archivo devuelto por la API: los locales vienen como `/api/files/…`. */
+export function fileUrl(url: string): string {
+  return url.startsWith('/api/') ? `${BASE_URL}${url.slice(4)}` : url
 }
 
 /** Texto para mostrar al usuario a partir de cualquier error. */

@@ -77,7 +77,7 @@ export const NAV: NavGroup[] = [
     items: [
       { path: '/pagos', label: 'Pagos', icon: CreditCard, crumb: 'Negocio / Pagos', requires: { permission: 'payment.read', feature: 'manual_payments' }, ready: true },
       { path: '/promociones', label: 'Promociones', icon: Tag, crumb: 'Negocio / Promociones', requires: { permission: 'organization.manage' }, ready: true },
-      { path: '/automatizaciones', label: 'Automatizaciones', icon: Zap, crumb: 'Negocio / Automatizaciones', requires: { permission: 'organization.manage' } },
+      { path: '/automatizaciones', label: 'Automatizaciones', icon: Zap, crumb: 'Negocio / Automatizaciones', requires: { permission: 'organization.manage' }, ready: true },
       { path: '/pagina-reservas', label: 'Página de reservas', icon: Globe, crumb: 'Negocio / Página de reservas', requires: { permission: 'organization.manage', feature: 'public_booking_page' }, ready: true },
       { path: '/reportes', label: 'Reportes', icon: ChartColumn, crumb: 'Negocio / Reportes', requires: { permission: 'report.view' }, ready: true },
     ],

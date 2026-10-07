@@ -1,17 +1,20 @@
-import { Check, X } from 'lucide-react'
+import { Check, ImageIcon, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader } from '@/components/ui/card'
 import { FilterChips } from '@/components/ui/controls'
 import { Skeleton } from '@/components/ui/display'
 import { Input } from '@/components/ui/field'
+import { Modal } from '@/components/ui/overlays'
 import { formatDate } from '@/features/clients/api'
+import { ProofImage } from '@/features/payments/proof-image'
 import { errorMessage } from '@/lib/api/client'
 import { BILLING_METHODS, money, usePlatformPayments, usePlatformReview, type SubscriptionPayment } from './api'
 
-function Row({ p }: { p: SubscriptionPayment }) {
+export function PaymentRow({ p }: { p: SubscriptionPayment }) {
   const { approve, reject } = usePlatformReview()
   const [rejecting, setRejecting] = useState(false)
+  const [showProof, setShowProof] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const run = async (fn: () => Promise<unknown>) => {
@@ -35,6 +38,13 @@ function Row({ p }: { p: SubscriptionPayment }) {
           </div>
         </div>
         <b className="tabular font-semibold">{money(p.amount, p.currency)}</b>
+        {p.hasProof ? (
+          <Button size="sm" onClick={() => setShowProof(true)}>
+            <ImageIcon size={13} aria-hidden /> Comprobante
+          </Button>
+        ) : (
+          <span className="text-2xs text-muted">Sin foto</span>
+        )}
         {p.status === 'pending' && !rejecting && (
           <div className="flex gap-2">
             <Button size="sm" variant="primary" disabled={approve.isPending} onClick={() => window.confirm(`¿Confirmar el pago de ${p.organization?.name}? Se activará su plan.`) && void run(() => approve.mutateAsync(p.id))}>
@@ -58,6 +68,9 @@ function Row({ p }: { p: SubscriptionPayment }) {
         </div>
       )}
       {error && <p className="m-0 text-xs font-semibold text-bad">{error}</p>}
+      <Modal open={showProof} onOpenChange={setShowProof} title={`Comprobante · ${p.organization?.name ?? 'Negocio'} · op. ${p.reference}`}>
+        {showProof && <ProofImage path={`/platform/billing/payments/${p.id}/proof`} />}
+      </Modal>
     </li>
   )
 }
@@ -91,7 +104,7 @@ export function PlatformPayments() {
       ) : (
         <ul className="m-0 list-none p-0">
           {items.map((p) => (
-            <Row key={p.id} p={p} />
+            <PaymentRow key={p.id} p={p} />
           ))}
         </ul>
       )}

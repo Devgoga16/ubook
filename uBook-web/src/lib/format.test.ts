@@ -16,12 +16,12 @@ describe('format', () => {
   })
 })
 
-import { formatUsd } from '@/features/auth/plans'
+import { formatPlanPrice } from '@/features/auth/plans'
 
-describe('formatUsd', () => {
-  it('muestra dólares como en el prototipo', () => {
-    expect(formatUsd(8900)).toBe('US$ 89')
-    expect(formatUsd(249000)).toBe('US$ 2,490')
+describe('formatPlanPrice', () => {
+  it('muestra los planes en soles', () => {
+    expect(formatPlanPrice(4900)).toBe('S/ 49')
+    expect(formatPlanPrice(129000)).toBe('S/ 1,290')
   })
 })
 

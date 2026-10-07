@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/controls'
 import { EmptyState, Skeleton } from '@/components/ui/display'
-import { Field, Input, Textarea } from '@/components/ui/field'
+import { Field, Input, Select, Textarea } from '@/components/ui/field'
+import { ProofUpload } from '@/components/ui/proof-upload'
 import { ApiError, api, errorMessage } from '@/lib/api/client'
-import type { PublicBookingView, PublicBusiness } from '@/lib/api/types'
+import type { DepositInfo, DepositMethod, PublicBookingView, PublicBusiness } from '@/lib/api/types'
 import { cn } from '@/lib/cn'
 import { formatCents } from '@/lib/format'
 import { formatLongDate, formatTime, isoToZoned } from '@/lib/time'
-import { businessSource, googleCalendarUrl, priceFrom, useBusiness, useCreateBooking } from './api'
+import { DEPOSIT_METHOD_LABEL, businessSource, depositAmount, googleCalendarUrl, priceFrom, uploadDepositProof, useBusiness, useCreateBooking } from './api'
 import { DateTimeChooser } from './date-time-chooser'
 import { JoinWaitlist } from './join-waitlist'
 import { PublicLayout } from './public-layout'
@@ -67,7 +68,9 @@ function Success({ business, booking, token, onAnother }: { business: PublicBusi
       <div>
         <h2 className="m-0 text-xl font-semibold">{pending ? `¡Gracias, ${booking.clientFirstName}!` : `¡Listo, ${booking.clientFirstName}!`}</h2>
         <p className="mt-1 mb-0 max-w-[44ch] text-sm text-muted">
-          {pending
+          {booking.deposit
+            ? `Recibimos tu comprobante de ${formatCents(booking.deposit.amount)}. ${business.name} validará tu adelanto y te avisará apenas confirme la cita.`
+            : pending
             ? `${business.name} revisará tu reserva y te avisará apenas la confirme.`
             : 'Tu cita quedó confirmada. Si dejaste tu correo, te enviamos los detalles y un recordatorio el día antes.'}
         </p>
@@ -98,6 +101,73 @@ function Success({ business, booking, token, onAnother }: { business: PublicBusi
   )
 }
 
+type DepositDraft = { method: DepositMethod | ''; reference: string; proofKey: string | null }
+
+/** El servicio pide adelanto: dónde pagar, cuánto y la foto del comprobante. */
+function DepositStep({
+  info,
+  amount,
+  approx,
+  value,
+  onChange,
+  upload,
+  errors,
+}: {
+  info: DepositInfo
+  amount: number
+  approx: boolean
+  value: DepositDraft
+  onChange: (next: DepositDraft) => void
+  upload: (file: File) => Promise<string>
+  errors: { method?: string; proof?: string }
+}) {
+  const ways = [
+    info.yape && { label: 'Yape', text: info.yape },
+    info.plin && { label: 'Plin', text: info.plin },
+    info.bank && { label: 'Transferencia', text: info.bank },
+  ].filter(Boolean) as Array<{ label: string; text: string }>
+  return (
+    <div className="flex flex-col gap-3 rounded-[12px] border border-teal-line bg-teal-soft/40 px-4 py-3.5">
+      <div>
+        <h3 className="m-0 text-sm font-bold">Adelanto para separar tu cita</h3>
+        <p className="mt-0.5 mb-0 text-sm text-ink-2">
+          Paga <b className="tabular">{formatCents(amount)}</b>
+          {approx && ' (aprox., según el profesional)'} y sube la captura. El negocio la valida y te confirma la cita.
+        </p>
+      </div>
+      {ways.length > 0 && (
+        <dl className="m-0 grid gap-1.5 rounded-[10px] bg-surface px-3 py-2.5 text-sm">
+          {ways.map((w) => (
+            <div key={w.label} className="flex gap-2">
+              <dt className="w-[104px] flex-none text-muted">{w.label}</dt>
+              <dd className="m-0 font-semibold break-words whitespace-pre-line">{w.text}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {info.notes && <p className="m-0 text-xs whitespace-pre-line text-muted">{info.notes}</p>}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="¿Cómo pagaste?" error={errors.method}>
+          {(p) => (
+            <Select {...p} value={value.method} onChange={(e) => onChange({ ...value, method: e.target.value as DepositMethod })}>
+              <option value="">Elige…</option>
+              {(Object.keys(DEPOSIT_METHOD_LABEL) as DepositMethod[]).map((m) => (
+                <option key={m} value={m}>
+                  {DEPOSIT_METHOD_LABEL[m]}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label="N.º de operación (opcional)">
+          {(p) => <Input {...p} value={value.reference} maxLength={60} onChange={(e) => onChange({ ...value, reference: e.target.value })} />}
+        </Field>
+      </div>
+      <ProofUpload upload={upload} onChange={(proofKey) => onChange({ ...value, proofKey })} error={errors.proof} />
+    </div>
+  )
+}
+
 /** /reservar/:slug — página pública para que el cliente reserve sin cuenta. */
 export function BookingPage() {
   const { slug = '' } = useParams<{ slug: string }>()
@@ -117,6 +187,7 @@ export function BookingPage() {
   const [promo, setPromo] = useState<{ code: string; type: 'percent' | 'amount'; value: number; description: string } | null>(null)
   const [promoError, setPromoError] = useState<string | null>(null)
   const [checkingPromo, setCheckingPromo] = useState(false)
+  const [deposit, setDeposit] = useState<{ method: DepositMethod | ''; reference: string; proofKey: string | null }>({ method: '', reference: '', proofKey: null })
 
   const b = business.data
   const branch = b && (b.branches.length === 1 ? b.branches[0]! : b.branches.find((x) => x.id === branchId))
@@ -162,6 +233,8 @@ export function BookingPage() {
   const servicesInBranch = branch ? b.services.filter((s) => b.professionals.some((p) => p.branchIds.includes(branch.id) && p.services.some((x) => x.serviceId === s.id))) : []
   const price = service && branch ? (pro ? (pro.services.find((s) => s.serviceId === service.id)?.price ?? service.price) : priceFrom(b, service.id, branch.id).min) : 0
   const priceVaries = service && branch && !pro ? priceFrom(b, service.id, branch.id).varies : false
+  const finalPrice = promo ? price - Math.min(price, promo.type === 'percent' ? Math.round((price * promo.value) / 100) : promo.value) : price
+  const depositDue = service?.deposit ? depositAmount(service.deposit, finalPrice) : 0
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,6 +245,10 @@ export function BookingPage() {
     if (!/^9\d{8}$/.test(form.phone.replace(/\s/g, ''))) next.phone = 'Celular de 9 dígitos que empiece con 9'
     if (form.email && !/^\S+@\S+\.\S+$/.test(form.email.trim())) next.email = 'Correo inválido'
     if (!form.acceptsTerms) next.acceptsTerms = 'Necesitamos tu autorización para agendar'
+    if (depositDue) {
+      if (!deposit.method) next.depositMethod = 'Elige cómo pagaste'
+      if (!deposit.proofKey) next.depositProof = 'Sube la foto de tu comprobante'
+    }
     setErrors(next)
     if (Object.keys(next).length || !branch || !service || !startsAt) return
     try {
@@ -185,6 +262,9 @@ export function BookingPage() {
         acceptsTerms: true,
         marketingConsent: form.marketingConsent,
         promoCode: promo?.code,
+        ...(depositDue && deposit.proofKey && deposit.method && {
+          deposit: { proofKey: deposit.proofKey, method: deposit.method, reference: deposit.reference.trim() || undefined },
+        }),
       })
       setResult(res)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -192,6 +272,9 @@ export function BookingPage() {
       if (err instanceof ApiError && err.code.startsWith('PROMO_')) {
         setPromo(null)
         setPromoError(err.message)
+      } else if (err instanceof ApiError && (err.code === 'INVALID_PROOF' || err.code === 'INVALID_IMAGE')) {
+        setDeposit((d) => ({ ...d, proofKey: null }))
+        setErrors((x) => ({ ...x, depositProof: err.message }))
       } else if (err instanceof ApiError && (err.code === 'SLOT_TAKEN' || err.code === 'SLOT_UNAVAILABLE')) {
         setStartsAt(null)
         setError('Alguien acaba de tomar ese horario. Elige otro, por favor.')
@@ -440,20 +523,44 @@ export function BookingPage() {
               {promoError && <span className="text-2xs font-semibold text-bad">{promoError}</span>}
             </div>
 
+            {depositDue > 0 && (
+              <DepositStep
+                info={b.depositInfo}
+                amount={depositDue}
+                approx={priceVaries}
+                value={deposit}
+                onChange={(next) => {
+                  setDeposit(next)
+                  setErrors(({ depositMethod, depositProof, ...rest }) => ({
+                    ...rest,
+                    ...(!next.method && depositMethod && { depositMethod }),
+                    ...(!next.proofKey && depositProof && { depositProof }),
+                  }))
+                }}
+                upload={(file) => uploadDepositProof(slug, file)}
+                errors={{ method: errors.depositMethod, proof: errors.depositProof }}
+              />
+            )}
+
             <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3.5">
               <div className="flex-1">
-                <div className="text-2xs text-muted">Total a pagar en el local</div>
+                <div className="text-2xs text-muted">{depositDue ? 'Total del servicio' : 'Total a pagar en el local'}</div>
                 <div className="tabular text-lg font-semibold">
                   {priceVaries && <span className="text-xs font-normal text-muted">desde </span>}
                   {promo ? (
                     <>
                       <span className="mr-2 text-sm font-normal text-muted line-through">{formatCents(price)}</span>
-                      {formatCents(price - Math.min(price, promo.type === 'percent' ? Math.round((price * promo.value) / 100) : promo.value))}
+                      {formatCents(finalPrice)}
                     </>
                   ) : (
                     formatCents(price)
                   )}
                 </div>
+                {depositDue > 0 && (
+                  <div className="text-2xs text-muted">
+                    Adelanto {formatCents(depositDue)} · resto en el local {formatCents(Math.max(0, finalPrice - depositDue))}
+                  </div>
+                )}
                 {promo && <div className="text-2xs text-muted">El descuento se confirma al reservar según el día y la hora.</div>}
               </div>
               <Button type="submit" variant="primary" disabled={create.isPending} className="px-5 py-2.5">

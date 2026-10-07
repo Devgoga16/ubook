@@ -44,6 +44,24 @@ export class BookingRules {
   manualApproval: ManualApproval;
 }
 
+/** Dónde paga el cliente el adelanto (se muestra en la página de reservas). */
+@Schema({ _id: false })
+export class DepositInfo {
+  /** "987 654 321 · Barbería Norte" */
+  @Prop({ trim: true, default: '' })
+  yape: string;
+
+  @Prop({ trim: true, default: '' })
+  plin: string;
+
+  /** Banco, cuenta y CCI. */
+  @Prop({ trim: true, default: '' })
+  bank: string;
+
+  @Prop({ trim: true, default: '' })
+  notes: string;
+}
+
 /** Negocio (tenant). Colección global: es la raíz del aislamiento. */
 @Schema({ timestamps: true, collection: 'organizations' })
 export class Organization {
@@ -77,6 +95,9 @@ export class Organization {
 
   @Prop({ type: BookingRules, default: () => ({}) })
   bookingRules: BookingRules;
+
+  @Prop({ type: DepositInfo, default: () => ({}) })
+  depositInfo: DepositInfo;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;

@@ -45,6 +45,42 @@ export class StatusChange {
   note?: string;
 }
 
+export const DEPOSIT_METHODS = ['yape', 'plin', 'transfer', 'other'] as const;
+export type DepositMethod = (typeof DEPOSIT_METHODS)[number];
+
+/** Adelanto pagado por el cliente al reservar online, con su comprobante. */
+@Schema({ _id: false })
+export class AppointmentDeposit {
+  /** Céntimos. */
+  @Prop({ required: true, min: 1 })
+  amount: number;
+
+  @Prop({ type: String, enum: ['pending_review', 'approved', 'rejected'], default: 'pending_review' })
+  status: 'pending_review' | 'approved' | 'rejected';
+
+  /** Clave del comprobante en el almacenamiento privado. */
+  @Prop({ required: true })
+  proofKey: string;
+
+  @Prop({ type: String, enum: DEPOSIT_METHODS, required: true })
+  method: DepositMethod;
+
+  @Prop({ trim: true })
+  reference?: string;
+
+  @Prop({ required: true })
+  submittedAt: Date;
+
+  @Prop({ type: Date, default: null })
+  reviewedAt: Date | null;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', default: null })
+  reviewedBy: Types.ObjectId | null;
+
+  @Prop({ trim: true })
+  rejectReason?: string;
+}
+
 /** Una cita: un servicio, con un profesional, en una sede, a una hora. */
 @Schema({ timestamps: true, collection: 'appointments' })
 export class Appointment {
@@ -108,6 +144,10 @@ export class Appointment {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
   createdBy?: Types.ObjectId;
 
+  /** Adelanto por validar o validado (solo reservas online de servicios con adelanto). */
+  @Prop({ type: AppointmentDeposit, default: null })
+  deposit: AppointmentDeposit | null;
+
   /** Recurso asignado (sala, camilla, equipo), si el servicio lo necesita. */
   @Prop({ type: SchemaTypes.ObjectId, ref: 'Resource', default: null })
   resourceId: Types.ObjectId | null;
@@ -121,6 +161,10 @@ export class Appointment {
 
   @Prop({ type: String, default: null })
   promotionCode: string | null;
+
+  /** Pedido de reseña enviado (evita duplicados). */
+  @Prop({ type: Date, default: null })
+  reviewRequestedAt: Date | null;
 
   /** Recordatorio de 24 h enviado (evita duplicados). */
   @Prop({ type: Date, default: null })

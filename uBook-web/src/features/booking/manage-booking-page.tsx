@@ -87,7 +87,21 @@ export function ManageBookingPage() {
           <h2 className="m-0 text-lg font-semibold">Hola, {b.clientFirstName}</h2>
           <StatusChip status={b.status} />
         </div>
-        {b.status === 'pending' && <p className="m-0 text-sm text-muted">El negocio todavía tiene que confirmar tu reserva. Te avisaremos por correo.</p>}
+        {b.deposit?.status === 'pending_review' && b.status === 'pending' ? (
+          <p className="m-0 text-sm text-muted">
+            Recibimos tu comprobante de {formatCents(b.deposit.amount)}. El negocio está validando tu adelanto y te avisará apenas confirme la cita.
+          </p>
+        ) : (
+          b.status === 'pending' && <p className="m-0 text-sm text-muted">El negocio todavía tiene que confirmar tu reserva. Te avisaremos por correo.</p>
+        )}
+        {b.deposit?.status === 'approved' && (
+          <p className="m-0 text-sm text-ok">Adelanto de {formatCents(b.deposit.amount)} validado. Lo descontamos del total.</p>
+        )}
+        {b.deposit?.status === 'rejected' && (
+          <p className="m-0 rounded-control bg-bad-bg px-3 py-2 text-sm text-bad">
+            El negocio no pudo validar tu adelanto{b.deposit.rejectReason ? `: ${b.deposit.rejectReason}` : ''}. Comunícate con ellos si crees que es un error.
+          </p>
+        )}
         <div className="mt-1 divide-y divide-line">
           <Row icon={Clock} label="Cuándo">
             {whenText(b.startsAt)} <span className="font-normal text-muted">· {b.durationMinutes} min</span>

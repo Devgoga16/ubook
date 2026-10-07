@@ -1,4 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MAX_IMAGE_BYTES } from '../../core/storage/storage.service.js';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../core/auth/decorators.js';
 import {
@@ -39,6 +41,14 @@ export class PublicBookingController {
   @Get('businesses/:slug/days')
   days(@Param('slug') slug: string, @Query() q: PublicDaysQuery) {
     return this.booking.days(slug, q);
+  }
+
+  /** Foto del comprobante del adelanto (campo "file"). */
+  @Throttle(STRICT)
+  @Post('businesses/:slug/uploads')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
+  upload(@Param('slug') slug: string, @UploadedFile() file?: { buffer: Buffer }) {
+    return this.booking.uploadDeposit(slug, file?.buffer ?? Buffer.alloc(0));
   }
 
   @Throttle(STRICT)

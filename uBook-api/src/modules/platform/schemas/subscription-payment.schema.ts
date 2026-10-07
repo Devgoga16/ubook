@@ -37,6 +37,10 @@ export class SubscriptionPayment {
   @Prop({ required: true, match: /^\d{4}-\d{2}-\d{2}$/ })
   paidOn: string;
 
+  /** Foto del comprobante (almacenamiento privado). */
+  @Prop({ type: String, default: null })
+  proofKey: string | null;
+
   @Prop({ trim: true })
   note?: string;
 

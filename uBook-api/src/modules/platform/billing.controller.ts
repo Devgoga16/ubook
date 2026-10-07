@@ -1,4 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MAX_IMAGE_BYTES } from '../../core/storage/storage.service.js';
+import { ParseObjectIdPipe } from '../../core/common/parse-object-id.pipe.js';
 import { Transform } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength } from 'class-validator';
 import { AllowWhenReadOnly, CurrentActor, RequirePermission } from '../../core/auth/decorators.js';
@@ -20,8 +23,8 @@ export class ReportPaymentDto {
   @Min(1)
   amount: number;
 
-  @IsIn(['PEN', 'USD'])
-  currency: 'PEN' | 'USD';
+  @IsIn(['PEN'], { message: 'Los pagos se registran en soles' })
+  currency: 'PEN';
 
   @IsIn(BILLING_METHODS)
   method: BillingMethod;
@@ -40,6 +43,11 @@ export class ReportPaymentDto {
   @IsString()
   @MaxLength(300)
   note?: string;
+
+  /** Clave que devolvió POST /billing/proof. */
+  @IsString()
+  @MaxLength(200)
+  proofKey: string;
 }
 
 /** Plan y pagos del negocio. Funciona aunque la prueba haya vencido (para poder pagar). */
@@ -52,6 +60,22 @@ export class BillingController {
   @Get()
   overview() {
     return this.billing.overview(TenantContext.requireOrganizationId());
+  }
+
+  /** Foto del comprobante (campo "file"); devuelve la clave para reportar el pago. */
+  @RequirePermission('subscription.manage')
+  @AllowWhenReadOnly()
+  @Post('proof')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
+  uploadProof(@UploadedFile() file?: { buffer: Buffer }) {
+    return this.billing.uploadProof(TenantContext.requireOrganizationId(), file?.buffer ?? Buffer.alloc(0));
+  }
+
+  @RequirePermission('subscription.manage')
+  @AllowWhenReadOnly()
+  @Get('payments/:id/proof')
+  proof(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.billing.proofUrl(id, TenantContext.requireOrganizationId());
   }
 
   @RequirePermission('subscription.manage')

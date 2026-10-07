@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api/client'
-import type { PublicBookingView, PublicBusiness, PublicDays, PublicSlots } from '@/lib/api/types'
+import type { DepositMethod, PublicBookingView, PublicBusiness, PublicDays, PublicSlots } from '@/lib/api/types'
 
 /** Llamadas sin sesión: nunca intentan renovar el token. */
 const publicApi = <T,>(path: string, init: { method?: string; body?: unknown } = {}) => api<T>(`/public${path}`, { ...init, skipRefresh: true })
@@ -44,6 +44,7 @@ export interface BookingInput {
   acceptsTerms: boolean
   marketingConsent?: boolean
   promoCode?: string
+  deposit?: { proofKey: string; method: DepositMethod; reference?: string }
 }
 
 export function useCreateBooking(slug: string) {
@@ -53,6 +54,21 @@ export function useCreateBooking(slug: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: ['public', slug, 'slots'] }),
   })
 }
+
+/** Sube la foto del comprobante del adelanto; devuelve la clave para la reserva. */
+export function uploadDepositProof(slug: string, file: File): Promise<string> {
+  const body = new FormData()
+  body.append('file', file)
+  return publicApi<{ key: string }>(`/businesses/${slug}/uploads`, { method: 'POST', body }).then((r) => r.key)
+}
+
+/** Monto del adelanto sobre el precio final (misma regla que el servidor). */
+export function depositAmount(rule: { type: 'percent' | 'fixed'; value: number }, price: number): number {
+  if (price <= 0) return 0
+  return rule.type === 'percent' ? Math.max(1, Math.round((price * rule.value) / 100)) : Math.min(rule.value, price)
+}
+
+export const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = { yape: 'Yape', plin: 'Plin', transfer: 'Transferencia', other: 'Otro' }
 
 export function useManagedBooking(token: string) {
   return useQuery({ queryKey: ['public', 'booking', token], queryFn: () => publicApi<PublicBookingView>(`/bookings/${token}`), retry: false })

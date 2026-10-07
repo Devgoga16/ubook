@@ -19,6 +19,7 @@ import type { PublicBookingDto, PublicDaysQuery, PublicSlotsQuery } from './dto/
 import type { PublicWaitlistDto } from './dto/waitlist.dto.js';
 import { WaitlistService } from './waitlist.service.js';
 import { PromotionsService } from '../promotions/promotions.service.js';
+import { StorageService } from '../../core/storage/storage.service.js';
 import { Appointment, type AppointmentDocument } from './schemas/appointment.schema.js';
 
 const unavailable = () =>
@@ -41,6 +42,7 @@ export class PublicBookingService {
     private readonly links: BookingLinksService,
     private readonly waitlist: WaitlistService,
     private readonly promotions: PromotionsService,
+    private readonly storage: StorageService,
   ) {}
 
   /* ---------- Página del negocio ---------- */
@@ -101,10 +103,17 @@ export class PublicBookingService {
           durationMinutes: s.durationMinutes,
           price: s.price,
           color: s.color,
+          deposit: s.deposit?.enabled && s.deposit.value > 0 ? { type: s.deposit.type, value: s.deposit.value } : null,
         })),
         professionals,
+        depositInfo: org.toObject().depositInfo ?? { yape: '', plin: '', bank: '', notes: '' },
       };
     });
+  }
+
+  /** Foto del comprobante del adelanto (antes de reservar). */
+  uploadDeposit(slug: string, buffer: Buffer) {
+    return this.open(slug, async (org) => ({ key: await this.storage.putImage(`deposits/${org.id as string}`, buffer) }));
   }
 
   /** Horarios libres de un día, por profesional (solo los disponibles). */
@@ -129,6 +138,12 @@ export class PublicBookingService {
     return this.open(slug, async (org) => {
       await this.assertOnlineService(dto.serviceId);
       await this.assertMonthlyLimit(org);
+      const svc = await this.services.findById(dto.serviceId).select('deposit').exec();
+      const depositRule = svc?.deposit?.enabled && svc.deposit.value > 0 ? svc.deposit : null;
+      if (depositRule) {
+        if (!dto.deposit) throw Errors.badRequest('DEPOSIT_REQUIRED', 'Este servicio pide un adelanto: sube la foto de tu comprobante');
+        if (!dto.deposit.proofKey.startsWith(`deposits/${org.id as string}/`)) throw Errors.badRequest('INVALID_PROOF', 'Comprobante inválido. Súbelo de nuevo.');
+      }
 
       const professionalId = dto.professionalId ?? (await this.pickProfessional(dto));
       const client = await this.resolveClient(dto);
@@ -168,6 +183,7 @@ export class PublicBookingService {
         status: pending ? 'pending' : 'confirmed',
         notes: dto.notes,
         promotion,
+        ...(depositRule && dto.deposit && { deposit: { type: depositRule.type, value: depositRule.value, ...dto.deposit } }),
       });
       return { token: this.links.token(appt.id as string), booking: await this.view(appt, org) };
     });
@@ -359,6 +375,7 @@ export class PublicBookingService {
       price: appt.price,
       listPrice: appt.listPrice ?? null,
       promotionCode: appt.promotionCode ?? null,
+      deposit: appt.deposit ? { amount: appt.deposit.amount, status: appt.deposit.status, rejectReason: appt.deposit.rejectReason ?? null } : null,
       durationMinutes: appt.durationMinutes,
       professional: { id: appt.professionalId.toString(), displayName: pro?.displayName ?? '', color: pro?.color ?? null },
       branch: {

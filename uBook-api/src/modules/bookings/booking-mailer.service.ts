@@ -10,7 +10,17 @@ import { Organization } from '../organization/schemas/organization.schema.js';
 import { EntitlementsService } from '../platform/entitlements.service.js';
 import { Professional } from '../professionals/schemas/professional.schema.js';
 import { BookingLinksService } from './booking-links.service.js';
+import { AutomationsService } from './automations/automations.service.js';
+import type { FlowKey } from './automations/automation.schemas.js';
 import { Appointment } from './schemas/appointment.schema.js';
+
+/** Aviso → flujo configurable. Los demás (cancelación, cambio) se envían siempre. */
+const FLOW_OF: Partial<Record<BookingEmailKind, FlowKey>> = {
+  confirmed: 'confirmation',
+  pending: 'confirmation',
+  approved: 'confirmation',
+  reminder: 'reminder',
+};
 
 /**
  * Correos al cliente sobre su cita. Solo si el cliente tiene correo y el plan
@@ -29,19 +39,27 @@ export class BookingMailerService {
     private readonly entitlements: EntitlementsService,
     private readonly links: BookingLinksService,
     private readonly mail: MailService,
+    private readonly automations: AutomationsService,
   ) {}
 
   /** Se ejecuta dentro del negocio de la cita (contexto de tenant activo). */
   async notify(kind: BookingEmailKind, appointmentId: string): Promise<boolean> {
     try {
       const organizationId = TenantContext.requireOrganizationId();
-      const features = (await this.entitlements.get(organizationId)).features;
-      if (features.email_notifications !== true) return false;
+      const flowKey = FLOW_OF[kind];
+      const flow = flowKey ? await this.automations.flow(flowKey) : null;
+      if (flow && !flow.enabled) return false;
 
       const appt = await this.appointments.findById(appointmentId).exec();
       if (!appt) return false;
+      // WhatsApp (si el flujo lo usa); el correo sigue abajo con su diseño propio.
+      const whatsapp = flowKey ? await this.automations.whatsappForAppointment(flowKey, appt) : false;
+      if (flow && !flow.channels.includes('email')) return whatsapp;
+
+      const features = (await this.entitlements.get(organizationId)).features;
+      if (features.email_notifications !== true) return whatsapp;
       const client = await this.clients.findById(appt.clientId).select('firstName email').exec();
-      if (!client?.email) return false;
+      if (!client?.email) return whatsapp;
       const [org, branch, pro] = await Promise.all([
         this.organizations.findById(organizationId).select('name slug').exec(),
         this.branches.findById(appt.branchId).select('name address timezone').exec(),
@@ -49,7 +67,7 @@ export class BookingMailerService {
       ]);
       if (!org || !branch) return false;
 
-      return await this.mail.send(
+      const ok = await this.mail.send(
         bookingEmail(kind, {
           to: client.email,
           firstName: client.firstName,
@@ -65,6 +83,11 @@ export class BookingMailerService {
           bookingUrl: this.mail.appUrl(`/reservar/${org.slug}`),
         }),
       );
+      await this.automations.record(flowKey ?? kind, 'email', client.email, ok ? null : 'No se pudo enviar el correo', {
+        clientId: client.id as string,
+        appointmentId,
+      });
+      return ok || whatsapp;
     } catch (error) {
       this.logger.error(`No se pudo enviar "${kind}" de la cita ${appointmentId}: ${(error as Error).message}`);
       return false;

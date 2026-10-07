@@ -6,6 +6,7 @@ import { Card, CardHeader } from '@/components/ui/card'
 import { Segmented } from '@/components/ui/controls'
 import { Skeleton } from '@/components/ui/display'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
+import { ProofUpload } from '@/components/ui/proof-upload'
 import { formatDate } from '@/features/clients/api'
 import { errorMessage } from '@/lib/api/client'
 import type { SubscriptionStatus } from '@/lib/api/types'
@@ -13,7 +14,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { cn } from '@/lib/cn'
 import { parseSoles } from '@/lib/format'
 import { todayLocal } from '@/lib/time'
-import { BILLING_METHODS, money, useBilling, useReportPayment, type BillingMethod } from './api'
+import { BILLING_METHODS, money, uploadBillingProof, useBilling, useReportPayment, type BillingMethod } from './api'
 
 const STATUS: Record<SubscriptionStatus, { label: string; tone: 'ok' | 'warn' | 'bad' | 'off' | 'teal' }> = {
   trialing: { label: 'Prueba gratis', tone: 'teal' },
@@ -29,9 +30,13 @@ export function BillingSection() {
   const billing = useBilling()
   const report = useReportPayment()
   const b = billing.data
-  const [form, setForm] = useState<{ planCode: string; billingCycle: 'monthly' | 'yearly'; amount: string; currency: 'PEN' | 'USD'; method: BillingMethod; reference: string; paidOn: string; note: string } | null>(null)
+  const [form, setForm] = useState<{ planCode: string; billingCycle: 'monthly' | 'yearly'; amount: string; currency: 'PEN'; method: BillingMethod; reference: string; paidOn: string; note: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+  const [proofKey, setProofKey] = useState<string | null>(null)
+  const [proofError, setProofError] = useState<string | undefined>()
+  // Al registrar un pago se vuelve a montar la subida vacía.
+  const [proofSlot, setProofSlot] = useState(0)
 
   if (billing.isLoading || !b) return <Skeleton className="h-[360px] rounded-card" />
 
@@ -48,10 +53,13 @@ export function BillingSection() {
     const amount = parseSoles(f.amount)
     if (!amount) return setError('Ingresa el monto que pagaste')
     if (f.reference.trim().length < 3) return setError('Escribe el número de operación')
+    if (!proofKey) return setProofError('Sube la foto o captura del pago')
     try {
-      await report.mutateAsync({ planCode: f.planCode, billingCycle: f.billingCycle, amount, currency: f.currency, method: f.method, reference: f.reference.trim(), paidOn: f.paidOn, note: f.note.trim() })
+      await report.mutateAsync({ planCode: f.planCode, billingCycle: f.billingCycle, amount, currency: f.currency, method: f.method, reference: f.reference.trim(), paidOn: f.paidOn, note: f.note.trim(), proofKey })
       setSent(true)
       setForm(null)
+      setProofKey(null)
+      setProofSlot((n) => n + 1)
       void reload()
     } catch (e) {
       setError(errorMessage(e))
@@ -114,7 +122,7 @@ export function BillingSection() {
           ) : (
             <p className="m-0 text-sm text-muted">Escríbenos para coordinar el pago. Luego regístralo aquí para activar tu plan.</p>
           )}
-          <p className="m-0 text-xs text-muted">Paga en soles al tipo de cambio del día o en dólares. Después de pagar, registra el pago con el número de operación: lo confirmamos en menos de 24 horas hábiles.</p>
+          <p className="m-0 text-xs text-muted">Los precios están en soles. Después de pagar, regístralo con el número de operación y la foto del comprobante: lo confirmamos en menos de 24 horas hábiles.</p>
         </Card>
 
         <Card className="flex flex-col gap-3">
@@ -155,11 +163,8 @@ export function BillingSection() {
                 </div>
                 <Field label="Monto pagado" hint={chosen ? `Precio: ${money(f.billingCycle === 'yearly' ? chosen.price.yearly : chosen.price.monthly, chosen.price.currency)}` : undefined}>
                   {(p) => (
-                    <div className="flex gap-2">
-                      <Select aria-label="Moneda" value={f.currency} onChange={(e) => set({ currency: e.target.value as 'PEN' | 'USD' })} className="w-[84px]">
-                        <option value="PEN">S/</option>
-                        <option value="USD">US$</option>
-                      </Select>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-muted">S/</span>
                       <Input {...p} inputMode="decimal" value={f.amount} onChange={(e) => set({ amount: e.target.value })} placeholder="0.00" />
                     </div>
                   )}
@@ -178,6 +183,13 @@ export function BillingSection() {
                 <Field label="N.º de operación">{(p) => <Input {...p} value={f.reference} onChange={(e) => set({ reference: e.target.value })} />}</Field>
                 <Field label="Fecha del pago">{(p) => <Input {...p} type="date" max={todayLocal()} value={f.paidOn} onChange={(e) => e.target.value && set({ paidOn: e.target.value })} />}</Field>
               </div>
+              <ProofUpload
+                key={proofSlot}
+                label="Foto del comprobante"
+                upload={uploadBillingProof}
+                onChange={(key) => (setProofKey(key), setProofError(undefined))}
+                error={proofError}
+              />
               <Field label="Nota (opcional)">{(p) => <Textarea {...p} rows={2} value={f.note} onChange={(e) => set({ note: e.target.value })} />}</Field>
               <Button variant="primary" className="self-end" disabled={report.isPending} onClick={() => void submit()}>
                 <CreditCard size={14} aria-hidden /> {report.isPending ? 'Enviando…' : 'Registrar pago'}

@@ -6,6 +6,7 @@ import { canActOn, currentScope } from '../../core/authorization/scope.js';
 import { AppError, Errors } from '../../core/common/errors.js';
 import { utcToZoned } from '../../core/scheduling/zoned-time.js';
 import { TenantContext } from '../../core/tenancy/tenant-context.js';
+import { StorageService } from '../../core/storage/storage.service.js';
 import { AppointmentsService } from '../bookings/appointments.service.js';
 import { Appointment, type AppointmentDocument } from '../bookings/schemas/appointment.schema.js';
 import { Counter } from '../bookings/schemas/counter.schema.js';
@@ -64,6 +65,7 @@ export class PaymentsService {
     @InjectModel(Client.name) private readonly clients: Model<Client>,
     @InjectModel(Branch.name) private readonly branches: Model<Branch>,
     private readonly appointmentsService: AppointmentsService,
+    private readonly storage: StorageService,
     private readonly audit: AuditService,
   ) {}
 
@@ -140,6 +142,50 @@ export class PaymentsService {
     });
     if (dto.complete) await this.appointmentsService.complete(appointmentId);
     return this.forAppointment(appointmentId);
+  }
+
+  /* ---------- Adelantos de reservas online ---------- */
+
+  /** Enlace temporal a la foto del comprobante. */
+  async depositProof(appointmentId: string) {
+    const appt = await this.appointments.findOne({ _id: appointmentId, ...(await this.readFilter<Appointment>()) }).exec();
+    if (!appt?.deposit) throw Errors.notFound('Adelanto');
+    return { url: await this.storage.url(appt.deposit.proofKey) };
+  }
+
+  /** Aprueba el adelanto: queda registrado como cobro y la cita se confirma. */
+  async approveDeposit(appointmentId: string) {
+    const appt = await this.appointments.findById(appointmentId).exec();
+    if (!appt?.deposit) throw Errors.notFound('Adelanto');
+    if (appt.deposit.status !== 'pending_review') throw Errors.badRequest('DEPOSIT_REVIEWED', 'Este adelanto ya fue revisado');
+    await this.create(appointmentId, {
+      methods: [{ method: appt.deposit.method, amount: appt.deposit.amount, reference: appt.deposit.reference }],
+      note: 'Adelanto de la reserva online',
+    });
+    await this.appointments.updateOne(
+      { _id: appointmentId },
+      { 'deposit.status': 'approved', 'deposit.reviewedAt': new Date(), 'deposit.reviewedBy': this.userId() },
+    ).exec();
+    if (appt.status === 'pending') await this.appointmentsService.changeStatus(appointmentId, 'confirmed', 'Adelanto validado');
+    await this.audit.log({ action: 'deposit.approved', entityType: 'Appointment', entityId: appointmentId, metadata: { amount: appt.deposit.amount } });
+    return this.appointmentsService.get(appointmentId);
+  }
+
+  /** Rechaza el adelanto (comprobante ilegible, monto incorrecto…): la cita se cancela y se libera el horario. */
+  async rejectDeposit(appointmentId: string, reason: string) {
+    const appt = await this.appointments.findById(appointmentId).exec();
+    if (!appt?.deposit) throw Errors.notFound('Adelanto');
+    if (!canActOn('payment.create', { branchIds: [appt.branchId.toString()] })) throw Errors.forbidden();
+    if (appt.deposit.status !== 'pending_review') throw Errors.badRequest('DEPOSIT_REVIEWED', 'Este adelanto ya fue revisado');
+    await this.appointments.updateOne(
+      { _id: appointmentId },
+      { 'deposit.status': 'rejected', 'deposit.reviewedAt': new Date(), 'deposit.reviewedBy': this.userId(), 'deposit.rejectReason': reason },
+    ).exec();
+    if (['pending', 'confirmed'].includes(appt.status)) {
+      await this.appointmentsService.changeStatus(appointmentId, 'cancelled', `Adelanto rechazado: ${reason}`, 'business');
+    }
+    await this.audit.log({ action: 'deposit.rejected', entityType: 'Appointment', entityId: appointmentId, metadata: { reason } });
+    return this.appointmentsService.get(appointmentId);
   }
 
   async void(id: string, reason: string) {

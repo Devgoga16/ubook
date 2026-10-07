@@ -1,11 +1,18 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsIn, IsInt, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
+import { IsDate, IsEmail, IsIn, IsInt, IsObject, IsOptional, IsString, IsTimeZone, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 import {
   SUBSCRIPTION_STATUSES,
   type BillingCycle,
   type SubscriptionStatus,
 } from '../platform/schemas/subscription.schema.js';
 import type { FeatureValue } from '../platform/features.catalog.js';
+
+export class DeleteOrganizationDto {
+  /** El slug del negocio, escrito a mano para confirmar. */
+  @IsString()
+  @MaxLength(80)
+  confirm: string;
+}
 
 export class ListOrganizationsQuery {
   @IsOptional()
@@ -59,4 +66,49 @@ export class UpdateSubscriptionDto {
 export class UpdateOrganizationStatusDto {
   @IsIn(['active', 'suspended'])
   status: 'active' | 'suspended';
+}
+
+export class PlatformUpdateOrganizationDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  name?: string;
+
+  /** Dirección de la página de reservas: /reservar/{slug}. */
+  @IsOptional()
+  @Matches(/^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$/, { message: 'Solo minúsculas, números y guiones' })
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  businessType?: string;
+
+  @IsOptional()
+  @IsTimeZone()
+  timezone?: string;
+}
+
+export class PlatformUpdateOwnerDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  lastName?: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Correo inválido' })
+  email?: string;
+
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @Matches(/^\+?[0-9 ()-]{6,20}$/, { message: 'Celular inválido' })
+  phone?: string | null;
 }

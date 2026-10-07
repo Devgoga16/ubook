@@ -1,12 +1,16 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, CircleAlert, Copy, ExternalLink, MessageCircle, Settings2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/field'
+import { Field, Input, Textarea } from '@/components/ui/field'
 import { useProfessionals } from '@/features/professionals/api'
 import { summarizeSchedule } from '@/features/professionals/schedule-summary'
 import { useServices } from '@/features/services/api'
+import { api, errorMessage } from '@/lib/api/client'
+import type { DepositInfo } from '@/lib/api/types'
+import { useAccess } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { cn } from '@/lib/cn'
 
@@ -23,6 +27,67 @@ function ChecklistItem({ ok, children, to, action }: { ok: boolean; children: Re
         </Link>
       )}
     </li>
+  )
+}
+
+const EMPTY: DepositInfo = { yape: '', plin: '', bank: '', notes: '' }
+
+/** A dónde paga el cliente el adelanto de los servicios que lo piden. */
+function DepositInfoCard() {
+  const qc = useQueryClient()
+  const { can, readOnly } = useAccess()
+  const org = useQuery({ queryKey: ['organization'], queryFn: () => api<{ depositInfo?: DepositInfo }>('/organization') })
+  const [draft, setDraft] = useState<DepositInfo | null>(null)
+  const [saved, setSaved] = useState(false)
+  const save = useMutation({
+    mutationFn: (depositInfo: DepositInfo) => api('/organization', { method: 'PATCH', body: { depositInfo } }),
+    onSuccess: () => {
+      setDraft(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+      void qc.invalidateQueries({ queryKey: ['organization'] })
+    },
+  })
+  const current = { ...EMPTY, ...org.data?.depositInfo }
+  const value = draft ?? current
+  const editable = can('organization.manage') && !readOnly
+  const set = (k: keyof DepositInfo) => (e: { target: { value: string } }) => setDraft({ ...value, [k]: e.target.value })
+  const empty = !current.yape && !current.plin && !current.bank
+
+  return (
+    <Card className="flex flex-col gap-4">
+      <CardHeader title="Datos para adelantos" className="mb-0" />
+      <p className="m-0 text-sm text-muted">
+        Si un servicio pide adelanto, el cliente ve estos datos al reservar, paga y sube la foto del comprobante. Tú la validas desde la cita o el Dashboard.
+      </p>
+      {empty && !draft && (
+        <p className="m-0 rounded-control bg-warn-bg px-3 py-2 text-sm text-warn">Completa al menos un medio de pago para que tus clientes sepan a dónde enviar el adelanto.</p>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Yape" hint="Número y nombre del titular">
+          {(p) => <Input {...p} value={value.yape} onChange={set('yape')} disabled={!editable} maxLength={120} placeholder="987 654 321 · Barbería Lima" />}
+        </Field>
+        <Field label="Plin">
+          {(p) => <Input {...p} value={value.plin} onChange={set('plin')} disabled={!editable} maxLength={120} />}
+        </Field>
+      </div>
+      <Field label="Transferencia" hint="Banco, n.º de cuenta y CCI">
+        {(p) => <Textarea {...p} rows={2} value={value.bank} onChange={set('bank')} disabled={!editable} maxLength={300} placeholder="BCP 191-1234567-0-12 · CCI 002-191-001234567012-55" />}
+      </Field>
+      <Field label="Indicaciones (opcional)">
+        {(p) => <Textarea {...p} rows={2} value={value.notes} onChange={set('notes')} disabled={!editable} maxLength={500} placeholder="Ej.: el adelanto no es reembolsable si cancelas con menos de 24 h." />}
+      </Field>
+      {save.error && <p role="alert" className="m-0 text-sm font-semibold text-bad">{errorMessage(save.error)}</p>}
+      {editable && (
+        <div className="flex items-center justify-end gap-2.5">
+          {saved && <span className="text-sm font-semibold text-ok">Guardado</span>}
+          {draft && <Button onClick={() => setDraft(null)}>Descartar</Button>}
+          <Button variant="primary" disabled={!draft || save.isPending} onClick={() => draft && save.mutate(draft)}>
+            {save.isPending ? 'Guardando…' : 'Guardar'}
+          </Button>
+        </div>
+      )}
+    </Card>
   )
 }
 
@@ -95,6 +160,8 @@ export function BookingSettingsPage() {
           </ChecklistItem>
         </ul>
       </Card>
+
+      <DepositInfoCard />
 
       <Card className="flex flex-wrap items-center gap-3">
         <Settings2 size={20} className="text-brand" aria-hidden />
