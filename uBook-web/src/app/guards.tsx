@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/display'
 import { meets } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { homeFor } from '@/lib/auth/home'
+import { LandingPage } from '@/features/landing/landing-page'
 
 function Splash() {
   return (
@@ -18,12 +19,15 @@ function Splash() {
   )
 }
 
-/** Requiere sesión iniciada. */
+/** Requiere sesión iniciada. Sin sesión, la raíz muestra la landing en vez de mandar al login. */
 export function RequireSession() {
   const { status } = useAuth()
   const { pathname } = useLocation()
   if (status === 'loading') return <Splash />
-  if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: pathname }} />
+  if (status === 'anonymous') {
+    if (pathname === '/') return <LandingPage />
+    return <Navigate to="/login" replace state={{ from: pathname }} />
+  }
   return <Outlet />
 }
 

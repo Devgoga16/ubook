@@ -18,6 +18,9 @@ Necesita la API corriendo. Sin MongoDB instalado: `pnpm --dir ../uBook-api dev:m
 - El menú (`components/layout/nav.ts`) declara qué permiso y qué funcionalidad del plan necesita cada pantalla;
   el mismo dato protege la ruta (`app/guards.tsx`).
 
+Sin sesión, `/` muestra la landing (`features/landing/`); `/inicio` la muestra siempre.
+`/registro?plan=pro` preselecciona el plan.
+
 Referencia visual: `../docs/ubook-prototipo.html`. En desarrollo, `/design` muestra todos los componentes base.
 
 ## Estructura

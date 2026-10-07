@@ -10,6 +10,7 @@ import { LoginPage } from '@/features/auth/login-page'
 import { NewOrganizationPage, OrganizationsPage } from '@/features/auth/organizations-page'
 import { RegisterPage } from '@/features/auth/register-page'
 import { DesignPage } from '@/features/design/design-page'
+import { LandingPage } from '@/features/landing/landing-page'
 import { ClientDetailPage } from '@/features/clients/client-detail-page'
 import { ClientsPage } from '@/features/clients/clients-page'
 import { NewClientPage } from '@/features/clients/new-client-page'
@@ -94,6 +95,8 @@ export const router = createBrowserRouter([
   { path: '/registro', element: <RegisterPage /> },
   // Pública: funciona con o sin sesión iniciada.
   { path: '/invitacion/:token', element: <AcceptInvitationPage /> },
+  // Landing siempre visible, también con sesión (en "/" solo se ve sin sesión).
+  { path: '/inicio', element: <LandingPage /> },
   // Páginas del cliente final (sin cuenta).
   { path: '/reservar/:slug', element: <BookingPage /> },
   { path: '/reserva/:token', element: <ManageBookingPage /> },

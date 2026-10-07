@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -56,6 +56,8 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const { data: plans } = usePlans()
+  // La landing preselecciona el plan con ?plan=pro.
+  const [params] = useSearchParams()
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -69,7 +71,7 @@ export function RegisterPage() {
       businessName: '',
       branchName: 'Sede principal',
       branchAddress: '',
-      planCode: 'pro',
+      planCode: params.get('plan') || 'pro',
       ownerAttends: true,
     },
     mode: 'onTouched',
