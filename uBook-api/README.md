@@ -33,6 +33,23 @@ Si Mongo no es replica set, la API se niega a arrancar y explica qué hacer.
 Si al arrancar ves `Server selection timed out` con `?replicaSet=rs0`, falta el paso 3
 (el replica set está configurado pero no inicializado).
 
+## Docker
+
+```bash
+docker build -t ubook-api .
+docker run -p 4000:4000 --env-file .env ubook-api
+```
+
+- Imagen multi-etapa (Node 22): compila con todas las dependencias y la final lleva
+  solo las de producción, corre sin root y escucha en `PORT` (4000 por defecto).
+- Healthcheck incluido: `GET /api/health` (también revisa la base de datos).
+- Variables obligatorias en producción: `MONGODB_URI` (replica set), `JWT_ACCESS_SECRET`
+  (32+ caracteres) y `RECORDS_ENCRYPTION_KEY`. Además, según lo que uses: `CORS_ORIGIN`,
+  `APP_URL`, `SUPERADMIN_EMAIL`/`SUPERADMIN_PASSWORD`, `RESEND_API_KEY`/`MAIL_FROM` y `R2_*`.
+- Sin Cloudflare R2, los archivos (comprobantes, logos) van a `/app/uploads`: monta un volumen
+  (`-v ubook-uploads:/app/uploads`) para no perderlos al recrear el contenedor.
+- `docker stop` apaga la API de forma ordenada (cierra conexiones antes de salir).
+
 ## Tests
 
 ```bash

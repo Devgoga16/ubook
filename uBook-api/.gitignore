@@ -9,3 +9,6 @@ coverage/
 # Archivos subidos en desarrollo (sin R2)
 .uploads/
 .uploads-test/
+
+# Caché de compilación de TypeScript
+*.tsbuildinfo
