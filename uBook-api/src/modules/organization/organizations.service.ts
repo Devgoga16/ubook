@@ -5,6 +5,7 @@ import { Types, type ClientSession, type Connection, type Model } from 'mongoose
 import { AuditService } from '../../core/audit/audit.service.js';
 import { DEFAULT_ROLE_TEMPLATES, OWNER_ROLE_KEY } from '../../core/authorization/permissions.catalog.js';
 import { Errors } from '../../core/common/errors.js';
+import { LOGO_URL_TTL_SECONDS, StorageService } from '../../core/storage/storage.service.js';
 import { TenantContext } from '../../core/tenancy/tenant-context.js';
 import { EntitlementsService } from '../platform/entitlements.service.js';
 import { SubscriptionsService } from '../platform/subscriptions.service.js';
@@ -41,6 +42,7 @@ export class OrganizationsService {
     private readonly subscriptions: SubscriptionsService,
     private readonly entitlements: EntitlementsService,
     private readonly audit: AuditService,
+    private readonly storage: StorageService,
   ) {}
 
   /** Ejecuta `fn` en una transacción de Mongo (requiere replica set). */
@@ -132,6 +134,38 @@ export class OrganizationsService {
     const org = await this.organizations.findById(TenantContext.requireOrganizationId()).exec();
     if (!org) throw Errors.notFound('Negocio');
     return org;
+  }
+
+  /** El negocio como lo ve la app: con `logoUrl` firmado en vez de la clave interna. */
+  async view(org: OrganizationDocument): Promise<Record<string, unknown>> {
+    const { logoKey, ...rest } = org.toJSON() as unknown as Record<string, unknown> & { logoKey?: string | null };
+    return { ...rest, logoUrl: logoKey ? await this.storage.url(logoKey, LOGO_URL_TTL_SECONDS) : null };
+  }
+
+  async currentView(): Promise<Record<string, unknown>> {
+    return this.view(await this.getCurrent());
+  }
+
+  /** Reemplaza el logo. El archivo anterior se borra después de guardar el nuevo. */
+  async setLogo(buffer: Buffer): Promise<Record<string, unknown>> {
+    const org = await this.getCurrent();
+    const previous = org.logoKey;
+    org.logoKey = await this.storage.putImage(`logos/${org.id as string}`, buffer);
+    await org.save();
+    if (previous) await this.storage.delete(previous).catch(() => undefined);
+    await this.audit.log({ action: 'organization.logo_updated', entityType: 'Organization', entityId: org.id as string });
+    return this.view(org);
+  }
+
+  async removeLogo(): Promise<Record<string, unknown>> {
+    const org = await this.getCurrent();
+    if (org.logoKey) {
+      await this.storage.delete(org.logoKey).catch(() => undefined);
+      org.logoKey = null;
+      await org.save();
+      await this.audit.log({ action: 'organization.logo_removed', entityType: 'Organization', entityId: org.id as string });
+    }
+    return this.view(org);
   }
 
   async updateCurrent(input: UpdateOrganizationDto): Promise<OrganizationDocument> {

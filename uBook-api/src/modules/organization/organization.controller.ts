@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Type } from 'class-transformer';
 import { IsDate, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { AuditService } from '../../core/audit/audit.service.js';
 import { RequireFeature, RequirePermission } from '../../core/auth/decorators.js';
 import { PERMISSIONS } from '../../core/authorization/permissions.catalog.js';
+import { MAX_IMAGE_BYTES } from '../../core/storage/storage.service.js';
 import { TenantContext } from '../../core/tenancy/tenant-context.js';
 import { BranchesService } from './branches.service.js';
 import { CreateBranchDto, UpdateBranchDto } from './dto/branch.dto.js';
@@ -41,13 +43,29 @@ export class OrganizationController {
 
   @Get('organization')
   get() {
-    return this.organizations.getCurrent();
+    return this.organizations.currentView();
   }
 
   @RequirePermission('organization.manage')
   @Patch('organization')
-  update(@Body() dto: UpdateOrganizationDto) {
-    return this.organizations.updateCurrent(dto);
+  async update(@Body() dto: UpdateOrganizationDto) {
+    return this.organizations.view(await this.organizations.updateCurrent(dto));
+  }
+
+  /** Logo del negocio (JPG, PNG o WebP). Se ve en la app y en la página de reservas. */
+  @RequirePermission('organization.manage')
+  @RequireFeature('branding')
+  @Post('organization/logo')
+  @HttpCode(200)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
+  uploadLogo(@UploadedFile() file?: { buffer: Buffer }) {
+    return this.organizations.setLogo(file?.buffer ?? Buffer.alloc(0));
+  }
+
+  @RequirePermission('organization.manage')
+  @Delete('organization/logo')
+  removeLogo() {
+    return this.organizations.removeLogo();
   }
 
   @Get('branches')

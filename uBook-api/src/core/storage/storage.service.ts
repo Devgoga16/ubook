@@ -10,6 +10,8 @@ import type { Env } from '../../config/env.js';
 import { AppError } from '../common/errors.js';
 
 export const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
+/** Duración del enlace firmado del logo de un negocio. Las pantallas lo piden de nuevo al cargar. */
+export const LOGO_URL_TTL_SECONDS = 24 * 60 * 60;
 const IMAGE_TYPES = [
   { type: 'image/jpeg', ext: 'jpg', test: (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { type: 'image/png', ext: 'png', test: (b: Buffer) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
@@ -18,7 +20,7 @@ const IMAGE_TYPES = [
 
 /** Lo que sube el usuario, validado por su contenido (no por el nombre ni el tipo que declara el navegador). */
 export function detectImage(buffer: Buffer): { type: string; ext: string } {
-  if (!buffer?.length) throw new AppError(HttpStatus.BAD_REQUEST, 'FILE_REQUIRED', 'Adjunta la foto del comprobante');
+  if (!buffer?.length) throw new AppError(HttpStatus.BAD_REQUEST, 'FILE_REQUIRED', 'Adjunta una imagen');
   if (buffer.length > MAX_IMAGE_BYTES) throw new AppError(HttpStatus.BAD_REQUEST, 'FILE_TOO_LARGE', 'La foto pesa más de 6 MB');
   const match = IMAGE_TYPES.find((t) => t.test(buffer));
   if (!match) throw new AppError(HttpStatus.BAD_REQUEST, 'INVALID_IMAGE', 'Sube una foto en JPG, PNG o WebP');
@@ -101,6 +103,15 @@ export class StorageService {
       token = page.IsTruncated ? page.NextContinuationToken : undefined;
     } while (token);
     return deleted;
+  }
+
+  /** Borra un archivo. No falla si ya no existe. */
+  async delete(key: string): Promise<void> {
+    if (this.s3) {
+      await this.s3.send(new DeleteObjectsCommand({ Bucket: this.bucket!, Delete: { Objects: [{ Key: key }], Quiet: true } }));
+      return;
+    }
+    await rm(this.localPath(key), { force: true });
   }
 
   /** Enlace temporal para ver un archivo privado. */

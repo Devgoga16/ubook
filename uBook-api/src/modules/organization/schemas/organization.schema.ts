@@ -99,6 +99,10 @@ export class Organization {
   @Prop({ type: DepositInfo, default: () => ({}) })
   depositInfo: DepositInfo;
 
+  /** Logo del negocio en el almacenamiento privado (`logos/<orgId>/…`). Se expone como `logoUrl` firmado. */
+  @Prop({ type: String, default: null })
+  logoKey: string | null;
+
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;
 }

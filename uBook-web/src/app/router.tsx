@@ -31,6 +31,7 @@ import { ResourcesPage } from '@/features/resources/resources-page'
 import { AutomationsPage } from '@/features/automations/automations-page'
 import { OrganizationDetailPage } from '@/features/platform/organization-detail-page'
 import { ComingSoon } from '@/features/placeholder/coming-soon'
+import { PlansPage } from '@/features/platform/plans-page'
 import { SuperadminPage } from '@/features/platform/superadmin-page'
 import { NewProfessionalPage } from '@/features/professionals/new-professional-page'
 import { ProfessionalDetailPage } from '@/features/professionals/professional-detail-page'
@@ -49,6 +50,7 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/': () => <DashboardPage />,
   '/design': () => <DesignPage />,
   '/superadmin': () => <SuperadminPage />,
+  '/superadmin/planes': () => <PlansPage />,
   '/servicios': () => <ServicesPage />,
   '/profesionales': () => <ProfessionalsPage />,
   '/disponibilidad': () => <AvailabilityPage />,

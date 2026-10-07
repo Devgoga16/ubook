@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 import { Errors } from '../../core/common/errors.js';
+import { EntitlementsService } from './entitlements.service.js';
 import { isFeatureKey, isValidFeatureValue, type FeatureValue } from './features.catalog.js';
 import { DEFAULT_PLANS } from './plans.seed.js';
 import { Plan, type PlanDocument } from './schemas/plan.schema.js';
@@ -21,7 +22,10 @@ export interface PlanInput {
 export class PlansService {
   private readonly logger = new Logger(PlansService.name);
 
-  constructor(@InjectModel(Plan.name) private readonly plans: Model<Plan>) {}
+  constructor(
+    @InjectModel(Plan.name) private readonly plans: Model<Plan>,
+    private readonly entitlements: EntitlementsService,
+  ) {}
 
   /** Planes visibles en la página de precios. */
   listPublic(): Promise<PlanDocument[]> {
@@ -58,7 +62,9 @@ export class PlansService {
     if (features) {
       for (const [key, value] of Object.entries(features)) plan.features.set(key, value);
     }
-    return plan.save();
+    await plan.save();
+    this.entitlements.invalidateAll();
+    return plan;
   }
 
   /**

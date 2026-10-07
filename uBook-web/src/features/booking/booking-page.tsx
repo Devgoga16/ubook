@@ -292,7 +292,7 @@ export function BookingPage() {
 
   if (result) {
     return (
-      <PublicLayout title={b.name} subtitle={subtitle}>
+      <PublicLayout title={b.name} subtitle={subtitle} logoUrl={b.logoUrl}>
         <Success
           business={b}
           booking={result.booking}
@@ -308,7 +308,7 @@ export function BookingPage() {
   }
 
   return (
-    <PublicLayout title={b.name} subtitle={subtitle}>
+    <PublicLayout title={b.name} subtitle={subtitle} logoUrl={b.logoUrl}>
       {error && step !== 'details' && (
         <div role="alert" className="rounded-control bg-warn-bg px-4 py-3 text-sm font-semibold text-warn">
           {error}

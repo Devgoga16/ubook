@@ -1,10 +1,10 @@
 import { Moon, Sun } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { initials } from '@/lib/format'
+import { OrgLogo } from '@/components/ui/org-logo'
 import { useTheme } from '@/lib/theme'
 
 /** Marco de las páginas que ve el cliente final: el negocio arriba, uBook discreto abajo. */
-export function PublicLayout({ title, subtitle, children }: { title?: string; subtitle?: ReactNode; children: ReactNode }) {
+export function PublicLayout({ title, subtitle, logoUrl, children }: { title?: string; subtitle?: ReactNode; logoUrl?: string | null; children: ReactNode }) {
   const { resolved, setPreference } = useTheme()
   const dark = resolved === 'dark'
   return (
@@ -12,9 +12,7 @@ export function PublicLayout({ title, subtitle, children }: { title?: string; su
       <header className="bg-grad">
         <div className="mx-auto flex max-w-[680px] items-center gap-3.5 px-4 pt-6 pb-16">
           {title && (
-            <span aria-hidden className="grid size-12 flex-none place-items-center rounded-[14px] bg-white/20 text-lg font-semibold">
-              {initials(title)}
-            </span>
+            <OrgLogo name={title} logoUrl={logoUrl} className="size-12 rounded-[14px] bg-white/20 text-lg font-semibold shadow-card" />
           )}
           <div className="min-w-0 flex-1">
             {title && <h1 className="m-0 truncate text-xl font-semibold">{title}</h1>}

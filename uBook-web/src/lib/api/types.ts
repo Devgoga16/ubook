@@ -88,6 +88,8 @@ export interface Organization {
   country: string
   businessType?: string
   status: 'active' | 'suspended'
+  /** Enlace firmado y temporal; `null` sin logo. */
+  logoUrl?: string | null
 }
 
 export interface Entitlements {
@@ -497,6 +499,7 @@ export type DepositStatus = 'pending_review' | 'approved' | 'rejected'
 export interface PublicBusiness {
   name: string
   slug: string
+  logoUrl: string | null
   businessType: string | null
   rules: {
     minNoticeMinutes: number | null
@@ -551,7 +554,7 @@ export interface PublicBookingView {
   durationMinutes: number
   professional: { id: string; displayName: string; color: string | null }
   branch: { id: string; name: string; address: string; reference: string; mapsUrl: string; phone: string; timezone: string }
-  organization: { name: string; slug: string }
+  organization: { name: string; slug: string; logoUrl: string | null }
   clientFirstName: string
   rescheduleCount: number
   canCancel: boolean

@@ -7,6 +7,7 @@ import {
   CreditCard,
   Globe,
   House,
+  Layers,
   ListTodo,
   Palette,
   Scissors,
@@ -94,6 +95,7 @@ export const NAV: NavGroup[] = [
     label: 'Plataforma',
     items: [
       { path: '/superadmin', label: 'Negocios', icon: Building2, crumb: 'Unify Tec / Superadmin', platform: true, ready: true },
+      { path: '/superadmin/planes', label: 'Planes', icon: Layers, crumb: 'Unify Tec / Planes', platform: true, ready: true },
       { path: '/design', label: 'Sistema de diseño', icon: Palette, crumb: 'Desarrollo / Sistema de diseño', ready: true, devOnly: true },
     ],
   },

@@ -75,7 +75,7 @@ export function ManageBookingPage() {
   const closed = b.status === 'cancelled' || b.status === 'completed' || b.status === 'no_show'
 
   return (
-    <PublicLayout title={b.organization.name} subtitle={`Cita #UB-${b.number}`}>
+    <PublicLayout title={b.organization.name} subtitle={`Cita #UB-${b.number}`} logoUrl={b.organization.logoUrl}>
       {notice && (
         <div role="status" className="rounded-control bg-ok-bg px-4 py-3 text-sm font-semibold text-ok">
           {notice}

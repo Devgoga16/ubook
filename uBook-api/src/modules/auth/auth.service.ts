@@ -149,7 +149,7 @@ export class AuthService {
 
     const access = TenantContext.getAccess();
     const [organization, entitlements] = await Promise.all([
-      this.organizations.getCurrent(),
+      this.organizations.currentView(),
       this.entitlements.get(actor.organizationId),
     ]);
     return {

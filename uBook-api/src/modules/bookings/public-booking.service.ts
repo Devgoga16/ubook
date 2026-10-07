@@ -19,7 +19,7 @@ import type { PublicBookingDto, PublicDaysQuery, PublicSlotsQuery } from './dto/
 import type { PublicWaitlistDto } from './dto/waitlist.dto.js';
 import { WaitlistService } from './waitlist.service.js';
 import { PromotionsService } from '../promotions/promotions.service.js';
-import { StorageService } from '../../core/storage/storage.service.js';
+import { LOGO_URL_TTL_SECONDS, StorageService } from '../../core/storage/storage.service.js';
 import { Appointment, type AppointmentDocument } from './schemas/appointment.schema.js';
 
 const unavailable = () =>
@@ -73,10 +73,12 @@ export class PublicBookingService {
       const visible = services.filter((s) => bookable.has(s.id as string));
       const usedCategories = new Set(visible.map((s) => s.categoryId?.toString()).filter(Boolean));
       const rules = org.toObject().bookingRules;
+      const logoUrl = await this.logoUrl(org);
 
       return {
         name: org.name,
         slug: org.slug,
+        logoUrl,
         businessType: org.businessType ?? null,
         rules: {
           minNoticeMinutes: rules.minNoticeMinutes,
@@ -251,6 +253,13 @@ export class PublicBookingService {
     if (ent.readOnly || ent.features.public_booking_page !== true) throw unavailable();
   }
 
+  /** Logo firmado, solo si el plan incluye marca propia. */
+  private async logoUrl(org: OrganizationDocument): Promise<string | null> {
+    if (!org.logoKey) return null;
+    const ent = await this.entitlements.get(org.id as string);
+    return ent.features.branding === true ? this.storage.url(org.logoKey, LOGO_URL_TTL_SECONDS) : null;
+  }
+
   private async withBooking<T>(token: string, fn: (appt: AppointmentDocument, org: OrganizationDocument) => Promise<T>): Promise<T> {
     const id = this.links.verify(token);
     const appt = id ? await TenantContext.runAsSystem(() => this.appointments.findById(id).exec()) : null;
@@ -387,7 +396,7 @@ export class PublicBookingService {
         phone: branch?.phone ?? '',
         timezone: branch?.timezone ?? org.timezone,
       },
-      organization: { name: org.name, slug: org.slug },
+      organization: { name: org.name, slug: org.slug, logoUrl: await this.logoUrl(org) },
       clientFirstName: client?.firstName ?? '',
       rescheduleCount: appt.rescheduleCount,
       canCancel: open,

@@ -5,7 +5,7 @@ import { meets } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useBranch } from '@/lib/auth/branch-context'
 import { cn } from '@/lib/cn'
-import { initials } from '@/lib/format'
+import { OrgLogo } from '@/components/ui/org-logo'
 import { findNavItem, visibleNav, type NavItem } from './nav'
 
 function NavEntry({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
@@ -88,12 +88,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="flex flex-col items-center gap-2 pt-1 pb-1.5">
-        <div
-          aria-hidden
-          className="grid size-[62px] place-items-center rounded-full border border-line bg-surface text-lg font-bold tracking-[.04em] shadow-card"
-        >
-          {initials(orgName)}
-        </div>
+        <OrgLogo
+          name={orgName}
+          logoUrl={isPlatform ? null : me?.organization?.logoUrl}
+          className="size-[62px] rounded-full border border-line bg-surface text-lg tracking-[.04em] shadow-card"
+        />
         <div className="text-center text-base font-semibold">{orgName}</div>
         {isPlatform ? (
           <span className="rounded-full border border-line px-2.5 py-[3px] text-2xs text-muted">Panel de plataforma</span>

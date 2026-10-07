@@ -54,6 +54,11 @@ export class EntitlementsService {
     this.cache.delete(organizationId);
   }
 
+  /** Al editar un plan cambia lo que incluyen todos los negocios que lo tienen. */
+  invalidateAll(): void {
+    this.cache.clear();
+  }
+
   async hasFeature(organizationId: string, feature: FeatureKey): Promise<boolean> {
     const value = (await this.get(organizationId)).features[feature];
     return value === null || value === true || (typeof value === 'number' && value > 0);
