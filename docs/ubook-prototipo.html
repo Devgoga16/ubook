@@ -1,0 +1,993 @@
+<title>uBook Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell — sticky sidebar (business switcher + grouped nav) beside a main canvas; each nav item swaps a full screen in place */
+:root{
+  --bg:#F7F8FA;--surface:#FFFFFF;--surface-2:#F4F5F8;--ink:#1E1F3B;--ink-2:#4A4C6B;--muted:#9799AE;
+  --line:#ECEDF2;--line-strong:#D9DBE6;--brand:#575B9F;--brand-soft:#EEEFF8;--teal:#62C9D6;--teal-soft:#E6F7F9;--teal-line:#92D6E0;
+  --grad:linear-gradient(160deg,#6CD3DD 0%,#5F8FC4 48%,#575B9F 100%);
+  --ok:#2F9CAB;--ok-bg:#E3F5F7;--warn:#7A6BB8;--warn-bg:#EFEDF8;--bad:#C2566A;--bad-bg:#F9E8EC;--info:#575B9F;--info-bg:#E9EAF6;--off:#8C8EA3;--off-bg:#F0F1F5;--done:#6B6E90;--done-bg:#EDEEF3;
+  --map-bg:#EEF1F4;--map-road:#FFFFFF;--map-road2:#F6D98A;--map-water:#A9D6EE;--map-park:#CDE8C9;
+  --wa-bg:#E9E2D8;--wa-bub:#FFFFFF;--wa-me:#D7F5C9;
+  --shadow:0 1px 2px rgba(31,34,69,.04),0 8px 24px rgba(31,34,69,.06);
+  color-scheme:light;
+  --f:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:13px;line-height:1.45}
+h1,h2,h3,h4{text-wrap:balance}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.ic{flex:none;display:block}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+/* sidebar */
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.logo{font-weight:700;font-size:23px;color:var(--brand);letter-spacing:-.02em;padding:0 8px 14px;border-bottom:1px solid var(--line);text-align:center}
+.logo span{color:var(--teal)}
+.biz{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 6px}
+.biz-logo{width:62px;height:62px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--ink)}
+.biz-n{font-weight:600;font-size:13px}
+.biz-s{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:none;cursor:pointer}
+.navs{display:flex;flex-direction:column;gap:10px}
+.nav-g{display:flex;flex-direction:column;gap:1px}
+.nav-t{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:4px 8px;font-weight:700}
+.nav-a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;color:var(--ink-2);font-size:12px;font-weight:500;cursor:pointer;border:0;background:none;text-align:left;white-space:nowrap}
+.nav-a .nb{width:27px;height:27px;border-radius:8px;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--brand)}
+.nav-a:hover{background:var(--surface-2)}
+.nav-a.on{background:var(--surface-2);color:var(--ink);font-weight:600}
+.nav-a.on .nb{background:var(--grad);border-color:transparent;color:#fff}
+.addc{border:1.5px dashed var(--line-strong);border-radius:16px;padding:10px;display:flex}
+.addc>div{flex:1;background:var(--grad);border-radius:12px;color:#fff;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-height:118px;font-weight:600;font-size:14px;line-height:1.25;cursor:pointer}
+.plus{width:26px;height:26px;border-radius:50%;background:#fff;color:#575B9F;display:grid;place-items:center;align-self:center}
+/* main */
+.main{min-width:0;padding-block:20px 48px;padding-inline:28px;display:flex;flex-direction:column;gap:20px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.crumb{font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center}
+.top h1{font-size:13px;margin:3px 0 0;font-weight:700;color:var(--brand)}
+.top-r{display:flex;gap:12px;align-items:center}
+.search{display:flex;align-items:center;gap:8px;border:1px solid var(--line-strong);border-radius:9px;padding:7px 10px;color:var(--muted);background:var(--surface);min-width:240px;cursor:pointer;font-size:12px}
+.search kbd{margin-left:auto;font-family:inherit;font-size:10px;border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px}
+.icbtn{background:none;border:0;color:var(--ink-2);cursor:pointer;position:relative;padding:4px;border-radius:8px;display:grid;place-items:center}
+.icbtn:hover{background:var(--surface-2)}
+.badge{position:absolute;top:-4px;right:-8px;background:var(--teal);color:#fff;font-size:9px;font-weight:700;border-radius:9px;padding:1px 5px}
+.ov{font-weight:600;font-size:14px;margin:0}
+#screen{display:flex;flex-direction:column;gap:20px;min-width:0}
+/* building blocks */
+.g-auto{grid-template-columns:minmax(0,260px) minmax(0,1fr) minmax(0,300px)}.g-web{grid-template-columns:minmax(0,1fr) minmax(0,320px)}.g-cf{grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,280px)}
+.card{background:var(--surface);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.card-h h3{margin:0;font-size:14px;font-weight:700}
+.muted{color:var(--muted)}.sm{font-size:11.5px}.b{font-weight:600}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sp{margin-left:auto}
+.grid{display:grid;gap:18px;min-width:0}
+.g2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.g2e{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.gside{grid-template-columns:minmax(0,1fr) 340px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hero{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:center}
+.hero h2{font-size:30px;line-height:1.12;margin:0 0 10px;font-weight:600;letter-spacing:-.01em}
+.hero p{margin:0;color:var(--ink-2)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.kpi{border:1.5px solid var(--teal-line);border-radius:14px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:3px;color:var(--brand);text-align:left;cursor:pointer;min-height:132px}
+.kpi .ki{margin-bottom:auto;padding-bottom:14px}
+.kpi b{font-size:13px;font-weight:600}
+.kpi .kv{font-size:21px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi .kd{font-size:11px;color:var(--muted)}
+.kpi.on{background:var(--grad);border-color:transparent;color:#fff}
+.kpi.on .kv,.kpi.on .kd{color:#fff}
+.kpi.flat{flex-direction:row;align-items:center;gap:14px;min-height:0;padding:14px 16px;border:0;box-shadow:var(--shadow);cursor:default}
+.kpi.flat .ki{margin:0;padding:0;color:var(--ink-2)}
+.kpi.flat .kv{font-size:15px}
+.kpi.flat b{color:var(--muted);font-weight:600;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-conf{color:var(--ok);background:var(--ok-bg)}.st-pend{color:var(--warn);background:var(--warn-bg)}.st-curso{color:var(--info);background:var(--info-bg)}
+.st-comp{color:var(--done);background:var(--done-bg)}.st-can{color:var(--bad);background:var(--bad-bg)}.st-nos{color:var(--off);background:var(--off-bg)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:600;background:var(--brand-soft);color:var(--brand);white-space:nowrap}
+.tag.t{background:var(--teal-soft);color:var(--teal)}.tag.r{background:var(--bad-bg);color:var(--bad)}.tag.w{background:var(--warn-bg);color:var(--warn)}.tag.g{background:var(--ok-bg);color:var(--ok)}.tag.o{background:var(--off-bg);color:var(--off)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.btn:hover{border-color:var(--teal)}
+.btn.pri{background:var(--grad);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 10px;font-size:11px}
+.btn.dng{color:var(--bad)}
+.tw{overflow-x:auto;margin-inline:-6px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-weight:500;color:var(--muted);font-size:11px;text-align:left;padding:8px 10px;white-space:nowrap}
+td{padding:10px;border-top:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover td,tr.sel td{background:var(--surface-2)}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.av{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:600;font-size:11.5px;flex:none;letter-spacing:.02em}
+.av.r{border-radius:50%}.av.s{width:26px;height:26px;font-size:9.5px;border-radius:7px}.av.l{width:52px;height:52px;font-size:16px;border-radius:14px}
+.avs{display:flex}.avs .av{margin-left:-7px;border:2px solid var(--surface)}.avs .av:first-child{margin-left:0}
+.tg{width:34px;height:20px;border-radius:20px;background:var(--line-strong);position:relative;flex:none;border:0;cursor:pointer;padding:0}
+.tg::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.tg.on{background:var(--teal)}.tg.on::after{left:17px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:3px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;font-size:11.5px;color:var(--muted);cursor:pointer;font-weight:600}
+.seg .on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs .on{color:var(--brand);border-color:var(--teal)}
+.fchips{display:flex;gap:8px;flex-wrap:wrap}
+.fchip{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.fchip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld label,.lbl{font-size:11px;color:var(--muted);font-weight:600}
+.inp{border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font:inherit;font-size:12.5px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+textarea.inp{resize:vertical;min-height:64px}
+.dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 14px;font-size:12px;align-items:center}
+.dl dt{display:flex;align-items:center;gap:8px;font-weight:600}
+.dl dd{margin:0;color:var(--muted)}
+.bar{height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.bar i{display:block;height:100%;background:var(--grad);border-radius:6px}
+.dash-add{border:1.5px dashed var(--line-strong);border-radius:16px;padding:10px;display:flex;min-height:180px}
+.dash-add>div{flex:1;background:var(--grad);border-radius:12px;color:#fff;padding:18px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;font-weight:600;font-size:15px;text-align:center;cursor:pointer}
+.photo{background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:600;font-size:28px;border-radius:10px;position:relative;overflow:hidden}
+.photo::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 55%)}
+.lst>*{border-top:1px solid var(--line);padding-block:11px}
+.lst>*:first-child{border-top:0;padding-top:0}
+.alert{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:center}
+.alert .ai{width:32px;height:32px;border-radius:9px;display:grid;place-items:center}
+/* calendar */
+.cal-h{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:10px}
+.cal-n{display:flex;gap:2px}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:11.5px;font-variant-numeric:tabular-nums}
+.cal-g .dn{color:var(--muted);font-size:10.5px;font-weight:600;padding-bottom:4px}
+.cal-g .d{aspect-ratio:1;max-width:100%;display:grid;place-items:center;border-radius:50%;cursor:pointer;position:relative;font-weight:500}
+.cal-g .d:hover{background:var(--surface-2)}
+.d.o{color:var(--line-strong)}
+.d.sel{background:var(--grad);color:#fff}
+.d.today{box-shadow:inset 0 0 0 1.5px var(--teal)}
+.d.dot::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--teal)}
+.d.sel.dot::after{background:#fff}
+.d.full{color:var(--muted);text-decoration:line-through}
+.cal.big .cal-g{gap:6px;font-size:13px}
+/* agenda */
+.ag{display:grid;grid-template-columns:250px minmax(0,1fr);gap:18px;align-items:start}
+.agw{overflow-x:auto}
+.agg{min-width:680px;display:grid;grid-template-columns:52px repeat(4,minmax(0,1fr))}
+.agh{padding:0 8px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);min-width:0}
+.agh .nm{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agc{position:relative;height:680px;border-left:1px solid var(--line);background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 68px),repeating-linear-gradient(to bottom,transparent 0 34px,var(--surface-2) 34px 35px,transparent 35px 68px)}
+.agt{position:relative;height:680px}
+.agt span{position:absolute;right:8px;font-size:10.5px;color:var(--muted);transform:translateY(-50%);font-variant-numeric:tabular-nums}
+.ap{position:absolute;left:4px;right:4px;border-radius:8px;padding:4px 8px;font-size:10.5px;overflow:hidden;cursor:pointer;background:color-mix(in srgb,var(--c) 15%,var(--surface));border-left:3px solid var(--c);color:var(--ink-2);text-align:left;border-top:0;border-right:0;border-bottom:0}
+.ap:hover{box-shadow:var(--shadow);z-index:3}
+.ap b{display:block;font-weight:600;font-size:11.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .apm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.ap.can{opacity:.55}.ap.can b{text-decoration:line-through}.ap.nos{opacity:.6;border-left-style:dashed}
+.ap .ast{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%}
+.brk{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,var(--line) 6px 7px);font-size:10px;color:var(--muted);display:grid;place-items:center;font-weight:600}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--bad);z-index:4;pointer-events:none}
+.now::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--bad)}
+.lg{display:flex;flex-direction:column;gap:7px;font-size:11.5px}
+.ck{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line-strong);display:inline-grid;place-items:center;flex:none;color:#fff;cursor:pointer;background:var(--surface)}
+.ck.on{background:var(--brand);border-color:var(--brand)}
+/* overlay layer */
+#layer{position:fixed;inset:0;z-index:50;background:rgba(17,19,41,.38)}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);box-shadow:-10px 0 40px rgba(0,0,0,.18);overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:18px;padding-top:calc(22px + env(safe-area-inset-top,0px))}
+.pal{position:absolute;top:12vh;left:50%;transform:translateX(-50%);width:min(580px,calc(100% - 32px));background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+.pal-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.pal-in input{border:0;outline:0;font:inherit;font-size:14px;flex:1;background:none;color:var(--ink);min-width:0}
+.pal-g{padding:8px}
+.pal-t{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;padding:8px 10px 4px}
+.pal-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:12.5px;cursor:pointer}
+.pal-i.on,.pal-i:hover{background:var(--surface-2)}
+.pal-i kbd{margin-left:auto;font-family:inherit;font-size:10px;color:var(--muted);border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px}
+.notif{position:absolute;top:calc(64px + env(safe-area-inset-top,0px));right:24px;width:min(380px,calc(100% - 32px));background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:16px;max-height:76vh;overflow-y:auto}
+.ni{display:grid;grid-template-columns:34px minmax(0,1fr) 8px;gap:10px;align-items:start;padding:10px 6px;border-radius:10px}
+.ni.u{background:var(--surface-2)}
+.ni .ud{width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:6px}
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tl-i{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;position:relative;padding-bottom:14px}
+.tl-i::before{content:'';position:absolute;left:9px;top:18px;bottom:0;width:2px;background:var(--line)}
+.tl-i:last-child::before{display:none}
+.tl-d{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;color:#fff}
+.tl-i.done .tl-d{background:var(--teal);border-color:var(--teal)}
+.tl-i.cur .tl-d{border-color:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+.tl-i.done::before{background:var(--teal)}
+.tl-i b{font-size:12px;display:block}
+/* wizard */
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);padding:8px 14px 8px 8px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow)}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line-strong);font-size:11px;color:var(--muted)}
+.step.done .n{background:var(--teal);border-color:var(--teal);color:#fff}
+.step.done{color:var(--ink-2)}
+.step.act{color:var(--ink);box-shadow:0 0 0 1.5px var(--teal)}
+.step.act .n{background:var(--grad);color:#fff;border:0}
+.slots{display:flex;flex-wrap:wrap;gap:8px}
+.slot{border:1px solid var(--line-strong);border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;background:var(--surface);color:var(--ink);cursor:pointer;position:relative;font-variant-numeric:tabular-nums}
+.slot:hover{border-color:var(--teal)}
+.slot:disabled{color:var(--muted);background:var(--surface-2);text-decoration:line-through;cursor:not-allowed;border-style:dashed}
+.slot.on{background:var(--grad);color:#fff;border-color:transparent}
+.slot .hot{position:absolute;top:-8px;right:-6px;background:var(--warn);color:#fff;font-size:8.5px;padding:1px 5px;border-radius:6px;text-decoration:none}
+.sumr{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding-block:8px;border-top:1px solid var(--line)}
+.sumr span:first-child{color:var(--muted)}
+.pick{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+/* week editor */
+.wk{display:grid;grid-template-columns:40px minmax(0,1fr) 34px;gap:8px 12px;align-items:center;font-size:11.5px}
+.wk-t{position:relative;height:28px;background:var(--surface-2);border-radius:7px;box-shadow:inset 0 0 0 1px var(--line)}
+.wk-b{position:absolute;top:3px;bottom:3px;background:color-mix(in srgb,var(--teal) 28%,var(--surface));border:1px solid var(--teal);border-radius:5px;font-size:10px;display:flex;align-items:center;padding:0 6px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;cursor:ew-resize}
+.wk-b.br{background:repeating-linear-gradient(135deg,var(--surface-2) 0 5px,var(--line) 5px 6px);border-color:var(--line-strong);color:var(--muted)}
+.wk-b.off{background:var(--off-bg);border-color:var(--line-strong);color:var(--muted);left:0;right:0}
+.wk-ax{position:relative;height:14px;font-size:9.5px;color:var(--muted)}
+.wk-ax span{position:absolute;transform:translateX(-50%)}
+/* coupons */
+.tk{display:grid;grid-template-columns:104px minmax(0,1fr);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden;position:relative}
+.tk-l{background:var(--grad);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;font-weight:700;line-height:1;gap:4px;padding:10px}
+.tk-l small{font-size:10px;font-weight:600;opacity:.9}
+.tk::before,.tk::after{content:'';position:absolute;left:94px;width:20px;height:20px;border-radius:50%;background:var(--bg)}
+.tk::before{top:-10px}.tk::after{bottom:-10px}
+.tk-r{padding:14px 16px;display:flex;flex-direction:column;gap:8px;border-left:2px dashed var(--line-strong)}
+.code{font-family:ui-monospace,'Cascadia Code',Consolas,monospace;font-weight:700;letter-spacing:.06em;font-size:13px;color:var(--ink)}
+/* flow */
+.flow{display:flex;flex-direction:column;align-items:center}
+.node{width:min(100%,360px);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start;box-shadow:var(--shadow)}
+.node.on{box-shadow:0 0 0 1.5px var(--teal),var(--shadow)}
+.node .nt{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.node .nic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center}
+.conn{width:2px;height:16px;background:var(--line-strong)}
+.cadd{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--line-strong);display:grid;place-items:center;color:var(--muted);background:var(--surface);cursor:pointer}
+.fl-i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px;border-radius:10px;cursor:pointer;align-items:center}
+.fl-i.on{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.var{background:var(--teal-soft);color:var(--teal);border-radius:4px;padding:0 4px;font-weight:600}
+/* phone */
+.phone{width:280px;max-width:100%;border-radius:36px;border:9px solid #1F2245;background:var(--surface);overflow:hidden;margin:0 auto;box-shadow:0 18px 40px rgba(31,34,69,.25)}
+.ph-bar{display:flex;justify-content:space-between;font-size:10px;font-weight:600;padding:8px 18px 4px;color:var(--ink)}
+.wa{background:var(--wa-bg);min-height:430px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.wa-h{display:flex;align-items:center;gap:8px;background:var(--surface);margin:-12px -12px 4px;padding:10px 12px;font-size:12px;font-weight:600}
+.bub{background:var(--wa-bub);border-radius:10px;padding:8px 10px;font-size:11.5px;max-width:88%;box-shadow:0 1px 1px rgba(0,0,0,.08);color:var(--ink)}
+.bub.me{background:var(--wa-me);align-self:flex-end}
+.bub small{display:block;text-align:right;color:var(--muted);font-size:9px;margin-top:3px}
+.bub .qr{display:block;text-align:center;color:var(--info);font-weight:600;border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
+.pb{padding:14px;display:flex;flex-direction:column;gap:10px;min-height:440px;background:var(--surface-2)}
+.pb-s{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-radius:10px;padding:10px;font-size:11.5px;box-shadow:var(--shadow)}
+/* map */
+.map{border-radius:14px;overflow:hidden;position:relative;background:var(--map-bg);box-shadow:var(--shadow)}
+.map svg{display:block;width:100%;height:auto}
+.mpop{position:absolute;left:24%;top:22%;background:var(--surface);border-radius:10px;box-shadow:var(--shadow);display:flex;gap:10px;padding:8px;align-items:center;font-size:11px;max-width:60%}
+.mpop .photo{width:70px;height:54px;font-size:12px;flex:none}
+.br-c{display:grid;grid-template-columns:150px minmax(0,1fr);background:var(--surface);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1.5px solid transparent}
+.br-c.on{border-color:var(--teal-line)}
+.br-c .photo{border-radius:0;font-size:13px;min-height:200px}
+.br-b{padding:14px;display:flex;flex-direction:column;gap:6px;font-size:11.5px;min-width:0}
+/* heatmap */
+.hm{display:grid;grid-template-columns:34px repeat(12,minmax(0,1fr));gap:3px;font-size:10px;color:var(--muted);min-width:520px}
+.hm i{height:24px;border-radius:4px;display:block}
+.hm span{display:flex;align-items:center;justify-content:center}
+.hbar{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:12px}
+.hbar .bar{height:10px}
+/* field builder */
+.fb-type{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px dashed var(--line-strong);border-radius:9px;font-size:12px;cursor:grab;background:var(--surface);color:var(--ink-2);font-weight:500}
+.fb-f{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface)}
+.fb-f.on{box-shadow:0 0 0 1.5px var(--teal)}
+.grip{color:var(--line-strong);cursor:grab}
+.vt{border:1.5px solid var(--line);border-radius:14px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left;color:var(--ink);position:relative}
+.vt:hover{border-color:var(--teal-line)}
+.vt.on{border-color:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+.vt .vi{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand)}
+.vt.on .vi{background:var(--grad);color:#fff}
+.term{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:10px;align-items:center}
+.qr{display:grid;grid-template-columns:repeat(21,1fr);width:120px;aspect-ratio:1;max-width:100%;background:#fff;padding:6px;border-radius:8px}
+.qr i{background:#1F2245}
+.swatch{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line-strong);cursor:pointer}
+.swatch.on{box-shadow:0 0 0 2px var(--teal)}
+.banner{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--grad);color:#fff;border-radius:14px;padding:16px 18px}
+.banner .bi{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center}
+.banner .btn{background:#fff;color:#575B9F;border:0}
+.rule{display:flex;flex-direction:column;gap:10px}
+.rule-h{display:flex;gap:12px;align-items:flex-start}
+.rule-h .ri{width:34px;height:34px;border-radius:9px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.rule p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+.val{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:9px;padding:8px 10px;font-size:12px;font-weight:600}
+.pill-m{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+@media (max-width:1180px){.gside,.g-auto,.g-cf{grid-template-columns:minmax(0,1fr)}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1000px){.g2,.g3,.g2e,.hero,.ag,.g-web{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px 16px;gap:12px}
+  .logo{text-align:left;padding-bottom:10px}
+  .biz{flex-direction:row}.biz-logo{width:40px;height:40px;font-size:9px}
+  .navs{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:4px}
+  .nav-g{flex-direction:row}.nav-t,.side .addc{display:none}
+  .main{padding-inline:16px}
+  .search{min-width:0;flex:1}.top-r{width:100%}
+  .br-c{grid-template-columns:minmax(0,1fr)}.br-c .photo{min-height:120px}
+  .hbar{grid-template-columns:100px minmax(0,1fr) 60px}
+}
+@media (max-width:560px){.g4{grid-template-columns:minmax(0,1fr)}.alert{grid-template-columns:32px minmax(0,1fr)}.alert .btn{grid-column:2;justify-self:start}.banner{grid-template-columns:minmax(0,1fr)}.banner .bi{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo">u<span>Book</span></div>
+    <div class="biz">
+      <div class="biz-logo">NORTE</div>
+      <div class="biz-n">Barbería Norte</div>
+      <button class="biz-s" id="sede" type="button">Sede Miraflores <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+    <nav class="navs" id="nav" aria-label="Pantallas"></nav>
+    <div class="addc"><div>Agregar nuevo negocio<span class="plus">+</span></div></div>
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div><div class="crumb" id="crumb"></div><h1 id="ttl"></h1></div>
+      <div class="top-r">
+        <button class="search" id="openPal" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Buscar clientes, citas…<kbd>Ctrl K</kbd></button>
+        <button class="icbtn" type="button" aria-label="Mi perfil"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.5-2 3.4-3 5.5-3s4 1 5.5 3"/></svg></button>
+        <button class="icbtn" type="button" aria-label="Configuración" data-go="config"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 14H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 10h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg></button>
+        <button class="icbtn" type="button" aria-label="Notificaciones" id="openNotif"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg><span class="badge">7</span></button>
+      </div>
+    </header>
+    <section id="screen"></section>
+  </main>
+</div>
+<div id="layer" hidden></div>
+
+<script>
+const P={
+home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+cal:'<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+calc:'<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M9 15l2 2 4-4"/>',
+calp:'<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v5M9.5 15.5h5"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-5.5 6.5-5.5s6.5 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20c0-2.8-1.6-4.6-4-5.2"/>',
+user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+idc:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 17c.6-1.7 2-2.6 3.5-2.6s2.9.9 3.5 2.6M15 10h3.5M15 13.5h3.5"/>',
+sc:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.2 8.2 20 20M8.2 15.8 20 4"/>',
+box:'<path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>',
+store:'<path d="M3.5 9 5.5 4h13l2 5M3.5 9v11h17V9M3.5 9h17M3.5 9a2.8 2.8 0 0 0 5.6 0 2.9 2.9 0 0 0 5.8 0 2.8 2.8 0 0 0 5.6 0M9.5 20v-5h5v5"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+card:'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/>',
+tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
+zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/>',
+sl:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+chart:'<path d="M4 20V11M10 20V4M16 20v-6M21 20H3"/>',
+list:'<path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+shield:'<path d="M12 3 4.5 6v6c0 4.6 3.2 7.8 7.5 9 4.3-1.2 7.5-4.4 7.5-9V6z"/><path d="m9 12 2 2 4-4"/>',
+phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2"/>',
+mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
+chk:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+x:'<path d="M6 6l12 12M18 6 6 18"/>',
+cl:'<path d="m15 18-6-6 6-6"/>',cr:'<path d="m9 18 6-6-6-6"/>',cd:'<path d="m6 9 6 6 6-6"/>',
+pin:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+msg:'<path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.5-5.2A8.5 8.5 0 1 1 21 12z"/>',
+spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+bld:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M16 9h2a2 2 0 0 1 2 2v10M3 21h18M8 7h4M8 11h4M8 15h4"/>',
+flag:'<path d="M4 21V4M4 4h12l-2 4 2 4H4"/>',
+grip:'<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+filter:'<path d="M3 5h18l-7 8.5V20l-4-2v-4.5z"/>',
+dots:'<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+txt:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+hash:'<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
+file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+sel:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m9 11 3 3 3-3"/>',
+sig:'<path d="M3 17c3 0 4-8 6-8s1 8 4 8 3-4 5-4 2 2 3 2"/><path d="M3 21h18"/>',
+heart:'<path d="M12 20s-7.5-4.5-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3c0 5.5-7.5 10-7.5 10z"/>',
+tooth:'<path d="M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7 .5 3 1 6.5 2.5 6.5S9.5 17 12 17s3 4 4.5 4 2-3.5 2.5-6.5c.5-2.5 2-4 2-7C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z"/>',
+brain:'<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3 3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3 3 3 0 0 1-3-3"/>',
+dumb:'<path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/>',
+nail:'<path d="M9 21v-9a3 3 0 0 1 6 0v9M9 12a3 3 0 0 1 6 0V6a3 3 0 0 0-6 0z"/>',
+leaf:'<path d="M5 19C5 10 10 5 20 4c-1 10-6 15-15 15zM5 19l7-7"/>',
+gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9M12 8c-2-4-6-4-6-1.5S9 8 12 8zM12 8c2-4 6-4 6-1.5S15 8 12 8z"/>',
+wait:'<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/><path d="M12 3v1"/>',
+dl:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/>',
+cash:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/>',
+refresh:'<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/>',
+lock:'<rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
+};
+const ic=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||''}</svg>`;
+const ini=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('');
+const av=(n,c,cls='')=>`<span class="av ${cls}" style="background:${c}">${ini(n)}</span>`;
+const ST={conf:['Confirmada','st-conf','var(--ok)'],pend:['Pendiente','st-pend','var(--warn)'],curso:['En curso','st-curso','var(--info)'],comp:['Completada','st-comp','var(--done)'],can:['Cancelada','st-can','var(--bad)'],nos:['No asistió','st-nos','var(--off)']};
+const chip=k=>`<span class="chip ${ST[k][1]}">${ST[k][0]}</span>`;
+const hm=t=>{const h=Math.floor(t),m=Math.round((t-h)*60);return `${h}:${String(m).padStart(2,'0')}`};
+const tg=on=>`<button class="tg${on?' on':''}" type="button" aria-pressed="${!!on}" aria-label="Activar"></button>`;
+const ck=on=>`<span class="ck${on?' on':''}" role="checkbox" aria-checked="${!!on}" tabindex="0">${on?ic('chk',11):''}</span>`;
+const kpi=(i,l,v,d,on)=>`<button class="kpi${on?' on':''}" type="button"><span class="ki">${ic(i,26)}</span><b>${l}</b><span class="kv">${v}</span><span class="kd">${d}</span></button>`;
+const kf=(i,l,v)=>`<div class="kpi flat">${ic(i,26)}<div><b>${l}</b><div class="kv">${v}</div></div></div>`;
+const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function cal(y,m,o={}){
+  const names=['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+  const off=(new Date(y,m,1).getDay()+6)%7, dim=new Date(y,m+1,0).getDate(), prev=new Date(y,m,0).getDate();
+  let c='';
+  for(let i=0;i<off;i++)c+=`<span class="d o">${prev-off+1+i}</span>`;
+  for(let d=1;d<=dim;d++){let k='d';if(d===o.sel)k+=' sel';if(d===o.today&&d!==o.sel)k+=' today';if(o.dots&&o.dots(d))k+=' dot';if(o.full&&o.full(d))k+=' full';c+=`<span class="${k}">${d}</span>`}
+  const rest=(7-(off+dim)%7)%7;for(let i=1;i<=rest;i++)c+=`<span class="d o">${i}</span>`;
+  return `<div class="cal ${o.big?'big':''}"><div class="cal-h"><span>${MES[m]} ${y}</span><span class="cal-n"><button class="icbtn" type="button" aria-label="Mes anterior">${ic('cl',16)}</button><button class="icbtn" type="button" aria-label="Mes siguiente">${ic('cr',16)}</button></span></div><div class="cal-g">${names.map(n=>`<span class="dn">${n}</span>`).join('')}${c}</div></div>`;
+}
+
+/* ---------- datos de ejemplo ---------- */
+const STAFF=[['Luis Paredes','Barbero senior','#575B9F'],['Andrea Quispe','Estilista','#4FB7C6'],['Diego Rojas','Barbero','#7A7FC4'],['Camila Torres','Manicurista','#3E8FA6']];
+const CC={'Mateo Huamán':'#575B9F','Valeria Ríos':'#4FB7C6','Sebastián Castro':'#7A7FC4','Lucía Mendoza':'#3E8FA6','Joaquín Vargas':'#6FC3CF','Fernanda Salazar':'#6B6FB0','Renato Chávez':'#8F93C9','Daniela Flores':'#5F8FC4'};
+const cc=n=>CC[n]||'#8F93C9';
+const PRICE={'Corte clásico':35,'Corte + barba':50,'Afeitado con toalla':30,'Corte + barba + cejas':65,'Tinte completo':120,'Tratamiento capilar':70,'Tinte + corte':150,'Peinado':45,'Manicure':40,'Pedicure spa':60,'Manicure semipermanente':65};
+const AP=[
+[0,9,.5,'Mateo Huamán','Corte clásico','comp'],[0,9.5,.75,'Renato Chávez','Corte + barba','comp'],[0,10.5,.5,'Joaquín Vargas','Afeitado con toalla','curso'],
+[0,11.5,.75,'Sebastián Castro','Corte + barba','conf'],[0,14,.5,'Bruno Alvarado','Corte clásico','pend'],[0,15,1,'Mateo Huamán','Corte + barba + cejas','conf'],[0,17,.5,'Iván Medina','Corte clásico','conf'],
+[1,9,1.5,'Valeria Ríos','Tinte completo','comp'],[1,11,.75,'Fernanda Salazar','Tratamiento capilar','curso'],[1,14.5,1.5,'Lucía Mendoza','Tinte + corte','conf'],[1,16.5,.5,'Daniela Flores','Peinado','pend'],
+[2,9.5,.5,'Pablo Núñez','Corte clásico','nos'],[2,10,.75,'Carlos Ramos','Corte + barba','comp'],[2,11,.5,'Andrés Peña','Corte clásico','conf'],[2,15,.5,'Hugo Silva','Corte clásico','can'],[2,16,.75,'Martín Ruiz','Corte + barba','conf'],
+[3,9,.75,'Daniela Flores','Manicure','comp'],[3,10,1,'Lucía Mendoza','Pedicure spa','curso'],[3,12,.75,'Fernanda Salazar','Manicure semipermanente','conf'],[3,15.5,1,'Valeria Ríos','Pedicure spa','pend']
+];
+const BRK=[[0,13,1,'Almuerzo'],[1,13,1.5,'Almuerzo'],[2,13.5,1,'Almuerzo'],[3,13,1,'Almuerzo'],[2,17.5,1.5,'Ausente · trámite']];
+const CL=[
+['Mateo Huamán','987 654 321',[['VIP','']],24,'S/ 1,180','2 oct','Hoy 15:00'],
+['Valeria Ríos','956 112 450',[['VIP',''],['Color','w']],18,'S/ 2,340','Hoy','Hoy 15:30'],
+['Sebastián Castro','912 330 871',[],9,'S/ 450','28 sep','Hoy 11:30'],
+['Lucía Mendoza','944 208 115',[['Nuevo','t']],2,'S/ 190','Hoy','Hoy 14:30'],
+['Joaquín Vargas','998 470 026',[],11,'S/ 330','Hoy','—'],
+['Fernanda Salazar','965 781 340',[['VIP','']],31,'S/ 3,120','Hoy','12 oct 10:00'],
+['Renato Chávez','923 615 902',[['En riesgo','r']],6,'S/ 300','14 jul','—'],
+['Daniela Flores','981 006 774',[],7,'S/ 410','Hoy','Hoy 16:30']
+];
+
+/* ---------- pantallas ---------- */
+const S={};
+S.dash={g:'Operación',l:'Dashboard',i:'home',c:'Dashboard',r:()=>{
+  const up=AP.map((a,i)=>[a,i]).filter(([a])=>['conf','pend','curso'].includes(a[5])).sort((x,y)=>x[0][1]-y[0][1]).slice(0,6);
+  return `
+  <p class="ov">Resumen</p>
+  <div class="hero">
+    <div><h2>Buen día, Luis</h2><p>Martes 6 de octubre · Sede Miraflores. Hoy tienes <b>38 citas</b> y 4 espacios libres por la tarde.</p></div>
+    <div class="kpis">${kpi('cal','Citas hoy','38','+5 vs. martes pasado',1)}${kpi('cash','Ingresos del día','S/ 1,840','Meta: S/ 2,200')}${kpi('chart','Ocupación','82%','Tarde: 64%')}${kpi('x','No-shows','2','5.2% del día')}${kpi('user','Clientes nuevos','6','3 reservaron por la web')}</div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-h"><h3>Próximas citas</h3><div class="seg"><button class="on" type="button">Hoy</button><button type="button">Mañana</button><button type="button">Semana</button></div></div>
+      <div class="lst">${up.map(([a,i])=>`<div class="up" data-ap="${i}" style="display:grid;grid-template-columns:44px 34px minmax(0,1fr) auto auto;gap:12px;align-items:center;cursor:pointer">
+        <b style="font-variant-numeric:tabular-nums">${hm(a[1])}</b>${av(a[3],cc(a[3]),'r')}
+        <div style="min-width:0"><div class="b" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a[3]}</div><div class="muted sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a[4]} · con ${STAFF[a[0]][0].split(' ')[0]}</div></div>
+        ${chip(a[5])}<button class="btn sm" type="button">${a[5]==='pend'?'Confirmar':a[5]==='curso'?'Cobrar':'Llegó'}</button></div>`).join('')}</div>
+    </div>
+    <div class="stack">
+      <div class="card"><div class="card-h"><h3>Ocupación por profesional</h3><span class="muted sm">Hoy</span></div>
+        <div class="stack">${STAFF.map((s,i)=>{const p=[92,88,61,74][i];return `<div class="row" style="flex-wrap:nowrap">${av(s[0],s[2],'s r')}<div style="flex:1;min-width:0"><div class="row sm" style="justify-content:space-between"><span class="b">${s[0]}</span><span class="muted">${p}%</span></div><div class="bar" style="margin-top:5px"><i style="width:${p}%"></i></div></div></div>`}).join('')}</div>
+      </div>
+      <div class="card"><div class="card-h"><h3>Requiere atención</h3><span class="tag r">4</span></div>
+        <div class="lst">
+          ${[['calc','var(--warn)','var(--warn-bg)','5 citas de mañana sin confirmar','Recordatorio programado a las 18:00','Enviar ya'],
+             ['card','var(--bad)','var(--bad-bg)','Pago pendiente · Renato Chávez','Corte + barba · S/ 50','Cobrar'],
+             ['wait','var(--info)','var(--info-bg)','Se liberó 15:00 con Diego','3 personas en lista de espera coinciden','Avisar'],
+             ['chart','var(--ok)','var(--ok-bg)','Andrea llega a 96% el jueves','Considera abrir un turno extra','Ver']].map(x=>`<div class="alert"><span class="ai" style="color:${x[1]};background:${x[2]}">${ic(x[0],16)}</span><div style="min-width:0"><div class="b sm">${x[3]}</div><div class="muted sm">${x[4]}</div></div><button class="btn sm" type="button">${x[5]}</button></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`}};
+
+S.agenda={g:'Operación',l:'Agenda',i:'cal',c:'Agenda',r:()=>{
+  const RH=68,top=t=>(t-9)*RH;
+  const hours=[];for(let h=9;h<=19;h++)hours.push(h);
+  return `
+  <div class="row" style="justify-content:space-between">
+    <div class="row"><button class="btn sm" type="button">Hoy</button><button class="icbtn" type="button" aria-label="Día anterior">${ic('cl')}</button><button class="icbtn" type="button" aria-label="Día siguiente">${ic('cr')}</button><span class="b" style="font-size:15px">Martes, 6 de octubre</span></div>
+    <div class="row"><div class="seg"><button class="on" type="button">Día</button><button type="button">Semana</button><button type="button">Mes</button></div><div class="seg"><button class="on" type="button">Por profesional</button><button type="button">Por recurso</button></div><button class="btn pri" type="button" data-go="nueva">${ic('plus',14)} Nueva cita</button></div>
+  </div>
+  <div class="ag">
+    <div class="stack">
+      <div class="card">${cal(2026,9,{sel:6,today:6,dots:d=>[7,8,9,13,14,15,16,20,21].includes(d),full:d=>[10,17].includes(d)})}</div>
+      <div class="card stack">
+        <div class="fld"><label for="f-sede">Sucursal</label><select class="inp" id="f-sede"><option>Sede Miraflores</option><option>Sede San Isidro</option><option>Sede Surco</option></select></div>
+        <div class="lbl">Profesionales</div>
+        <div class="lg">${STAFF.map(s=>`<div class="row" style="flex-wrap:nowrap">${ck(1)}<span style="width:10px;height:10px;border-radius:3px;background:${s[2]}"></span>${s[0]}</div>`).join('')}</div>
+        <div class="lbl">Estados</div>
+        <div class="row" style="gap:6px">${Object.keys(ST).map(chip).join('')}</div>
+      </div>
+    </div>
+    <div class="card agw">
+      <div class="agg">
+        <div style="border-bottom:1px solid var(--line)"></div>
+        ${STAFF.map((s,i)=>`<div class="agh">${av(s[0],s[2],'s r')}<div style="min-width:0"><div class="nm">${s[0]}</div><div class="muted sm">${[7,4,5,4][i]} citas · ${[92,88,61,74][i]}%</div></div></div>`).join('')}
+        <div class="agt">${hours.map(h=>`<span style="top:${top(h)}px">${h}:00</span>`).join('')}</div>
+        ${STAFF.map((s,si)=>`<div class="agc">
+          ${BRK.filter(b=>b[0]===si).map(b=>`<div class="brk" style="top:${top(b[1])}px;height:${b[2]*RH}px">${b[3]}</div>`).join('')}
+          ${AP.map((a,i)=>a[0]!==si?'':`<button type="button" class="ap ${a[5]}" data-ap="${i}" style="--c:${s[2]};top:${top(a[1])+1}px;height:${a[2]*RH-2}px"><span class="ast" style="background:${ST[a[5]][2]}"></span><b>${a[3]}</b><span class="apm">${hm(a[1])} – ${hm(a[1]+a[2])} · ${a[4]}</span></button>`).join('')}
+          ${si===0?`<div class="now" style="top:${top(11.17)}px"></div>`:`<div class="now" style="top:${top(11.17)}px;background:color-mix(in srgb,var(--bad) 50%,transparent)"></div>`}
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <p class="muted sm" style="margin:0">Haz clic en cualquier cita para abrir su detalle. Arrastrar mueve la cita; estirar el borde inferior cambia la duración.</p>`}};
+
+S.nueva={g:'Operación',l:'Nueva cita',i:'calp',c:'Agenda / Nueva cita',r:()=>`
+  <div class="steps">${['Servicio','Profesional','Fecha y hora','Cliente','Confirmar'].map((s,i)=>`<div class="step ${i<2?'done':i===2?'act':''}"><span class="n">${i<2?ic('chk',12):i+1}</span>${s}</div>`).join('')}</div>
+  <div class="grid gside">
+    <div class="card">
+      <div class="card-h"><h3>Elige fecha y hora</h3><div class="seg"><button class="on" type="button">Con Luis Paredes</button><button type="button">Cualquier profesional</button></div></div>
+      <div class="grid g2e" style="gap:28px">
+        ${cal(2026,9,{sel:8,today:6,big:1,dots:d=>d>6&&![10,11,17,18,25].includes(d),full:d=>[10,17].includes(d)})}
+        <div class="stack" style="gap:16px">
+          <div class="b">Jueves 8 de octubre</div>
+          ${[['Mañana',[['9:00',0],['9:45',1],['10:30',0],['11:15',0,1],['12:00',1]]],['Tarde',[['14:00',0],['14:45',0,0,1],['15:30',1],['16:15',0,1],['17:00',0]]],['Noche',[['18:00',0],['18:45',1]]]].map(([t,sl])=>`<div class="stack" style="gap:8px"><div class="lbl">${t}</div><div class="slots">${sl.map(([h,dis,hot,on])=>`<button type="button" class="slot${on?' on':''}" ${dis?'disabled':''}>${h}${hot?'<span class="hot">Popular</span>':''}</button>`).join('')}</div></div>`).join('')}
+          <div class="row muted sm">${ic('clock',14)} Duración 45 min + 10 min de limpieza. Los horarios tachados ya están ocupados.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3 style="margin:0;font-size:14px">Resumen de la cita</h3>
+      <div class="pick"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('sc',16)}</span><div><div class="b">Corte + barba</div><div class="muted sm">45 min · S/ 50</div></div><button class="btn sm sp" type="button">Cambiar</button></div>
+      <div class="pick">${av('Luis Paredes',STAFF[0][2],'r')}<div><div class="b">Luis Paredes</div><div class="muted sm">Barbero senior · 4.9 ★</div></div><button class="btn sm sp" type="button">Cambiar</button></div>
+      <div>
+        <div class="sumr"><span>Fecha</span><b>Jue 8 oct 2026</b></div>
+        <div class="sumr"><span>Hora</span><b>14:45 – 15:30</b></div>
+        <div class="sumr"><span>Sucursal</span><b>Miraflores</b></div>
+        <div class="sumr"><span>Recurso</span><b>Sillón 2 (asignado)</b></div>
+        <div class="sumr"><span>Depósito requerido</span><b>S/ 15</b></div>
+        <div class="sumr" style="font-size:14px"><span>Total</span><b>S/ 50.00</b></div>
+      </div>
+      <button class="btn pri" type="button">Continuar con el cliente ${ic('cr',14)}</button>
+    </div>
+  </div>`};
+
+S.espera={g:'Operación',l:'Lista de espera',i:'list',c:'Agenda / Lista de espera',r:()=>`
+  <div class="banner"><span class="bi">${ic('spark',22)}</span><div><div class="b" style="font-size:14px">Se liberó jueves 8 · 15:00 con Diego Rojas</div><div class="sm" style="opacity:.9">Hugo Silva canceló. 3 personas de la lista coinciden con ese horario y servicio.</div></div><button class="btn" type="button">Avisar a las 3</button></div>
+  <div class="card">
+    <div class="card-h"><h3>En espera <span class="muted">· 9</span></h3><div class="row"><div class="fchips"><button class="fchip on" type="button">Todos</button><button class="fchip" type="button">Coinciden hoy</button><button class="fchip" type="button">Avisados</button></div><button class="btn pri sm" type="button">${ic('plus',13)} Agregar</button></div></div>
+    <div class="tw"><table><thead><tr><th>Cliente</th><th>Servicio</th><th>Profesional</th><th>Preferencia</th><th>Desde</th><th>Estado</th><th></th></tr></thead><tbody>
+      ${[['Joaquín Vargas','Corte + barba','Diego Rojas','Jue–Vie · tarde','hace 2 días','Coincide','g'],['Renato Chávez','Corte clásico','Cualquiera','Cualquier día · 15:00–18:00','hace 1 día','Coincide','g'],['Sebastián Castro','Corte + barba','Diego Rojas','Jueves','hoy 09:12','Coincide','g'],['Daniela Flores','Peinado','Andrea Quispe','Sábado mañana','hace 4 días','Avisado · 2 h','w'],['Lucía Mendoza','Pedicure spa','Camila Torres','Mié–Jue','hace 6 días','En espera','o'],['Valeria Ríos','Tinte completo','Andrea Quispe','Lunes','hace 1 semana','En espera','o']].map((r,i)=>`<tr class="${i<3?'sel':''}"><td><div class="who">${av(r[0],cc(r[0]),'r')}${r[0]}</div></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="muted">${r[4]}</td><td><span class="tag ${r[6]}">${r[5]}</span></td><td><button class="btn sm" type="button">${r[6]==='g'?'Ofrecer horario':'Ver'}</button></td></tr>`).join('')}
+    </tbody></table></div>
+  </div>
+  <div class="grid g3">
+    <div class="card rule"><div class="rule-h"><span class="ri">${ic('zap',16)}</span><div class="b">Avisar automáticamente<p>Cuando se libera un horario se envía WhatsApp al primero que coincide.</p></div>${tg(1)}</div></div>
+    <div class="card rule"><div class="rule-h"><span class="ri">${ic('clock',16)}</span><div class="b">Tiempo para aceptar<p>Si no responde, pasa al siguiente de la lista.</p></div></div><div class="val">30 minutos</div></div>
+    <div class="card rule"><div class="rule-h"><span class="ri">${ic('globe',16)}</span><div class="b">Desde la web<p>El cliente se anota si su horario está lleno.</p></div>${tg(1)}</div></div>
+  </div>`};
+
+S.clientes={g:'Clientes',l:'Clientes',i:'users',c:'Clientes',r:()=>`
+  <div class="grid g4">${kf('users','Clientes activos','1,284')}${kf('user','Nuevos este mes','46')}${kf('refresh','Tasa de retorno','68%')}${kf('x','En riesgo','23')}</div>
+  <div class="card">
+    <div class="card-h"><h3>Lista de clientes</h3>
+      <div class="row"><div class="fchips"><button class="fchip on" type="button">Todos</button><button class="fchip" type="button">VIP</button><button class="fchip" type="button">Nuevos</button><button class="fchip" type="button">En riesgo</button><button class="fchip" type="button">Con próxima cita</button></div>
+      <button class="btn sm" type="button">${ic('dl',13)} Exportar</button><button class="btn pri sm" type="button">${ic('plus',13)} Nuevo cliente</button></div></div>
+    <div class="tw"><table><thead><tr><th>${ck(0)}</th><th>Nombre</th><th>Celular</th><th>Etiquetas</th><th>Visitas</th><th>Gasto total</th><th>Última visita</th><th>Próxima cita</th></tr></thead><tbody>
+      ${CL.map((c,i)=>`<tr class="${i===0?'sel':''}" data-go="ficha"><td>${ck(i===0)}</td><td><div class="who">${av(c[0],cc(c[0]))}${c[0]}</div></td><td>+51 ${c[1]}</td><td><div class="row" style="gap:4px">${c[2].map(t=>`<span class="tag ${t[1]}">${t[0]}</span>`).join('')||'<span class="muted">—</span>'}</div></td><td>${c[3]}</td><td>${c[4]}</td><td>${c[5]}</td><td>${c[6]==='—'?'<span class="muted">—</span>':`<span class="b">${c[6]}</span>`}</td></tr>`).join('')}
+    </tbody></table></div>
+  </div>`};
+
+S.ficha={g:'Clientes',l:'Ficha de cliente',i:'idc',c:'Clientes / Mateo Huamán',r:()=>`
+  <div class="grid g2">
+    <div class="card" style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:20px">
+      <div class="photo" style="min-height:170px;font-size:40px">MH</div>
+      <div class="stack" style="min-width:0">
+        <div class="row"><h2 style="margin:0;font-size:20px">Mateo Huamán</h2><span class="tag">VIP</span><span class="tag t">Prefiere WhatsApp</span></div>
+        <dl class="dl">
+          <dt>${ic('phone',15)} Celular</dt><dd>+51 987 654 321</dd>
+          <dt>${ic('mail',15)} Email</dt><dd>mateo.huaman@correo.pe</dd>
+          <dt>${ic('heart',15)} Cumpleaños</dt><dd>14 de noviembre · 29 años</dd>
+          <dt>${ic('user',15)} Profesional favorito</dt><dd>Luis Paredes</dd>
+          <dt>${ic('pin',15)} Sucursal habitual</dt><dd>Miraflores</dd>
+          <dt>${ic('clock',15)} Cliente desde</dt><dd>Marzo 2024 · llegó por Instagram</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="card stack">
+      <div class="card-h" style="margin:0"><h3>Próxima cita</h3>${chip('conf')}</div>
+      <div class="pick">${av('Luis Paredes',STAFF[0][2],'r')}<div><div class="b">Hoy · 15:00 – 16:00</div><div class="muted sm">Corte + barba + cejas con Luis · Sillón 1</div></div></div>
+      <div class="row"><button class="btn pri" type="button" data-go="nueva">${ic('calp',14)} Agendar</button><button class="btn" type="button">${ic('msg',14)} WhatsApp</button><button class="btn" type="button">${ic('cash',14)} Cobrar</button><button class="icbtn sp" type="button" aria-label="Más acciones">${ic('dots')}</button></div>
+      <div class="lbl">Etiquetas</div><div class="row" style="gap:6px"><span class="tag">VIP</span><span class="tag g">Paga por Yape</span><span class="tag o">Fade bajo</span><button class="btn sm" type="button">${ic('plus',12)}</button></div>
+    </div>
+  </div>
+  <div class="grid g4">${kf('calc','Total de citas','24')}${kf('cash','Gasto total','S/ 1,180')}${kf('refresh','Frecuencia','Cada 19 días')}${kf('x','No-shows','1')}</div>
+  <div class="card">
+    <div class="tabs"><button class="on" type="button">Historial</button><button type="button">Próximas (2)</button><button type="button">Pagos</button><button type="button">Mensajes</button><button type="button">Archivos</button></div>
+    <div class="grid g2" style="margin-top:18px">
+      <div class="tl">${[['done','2 oct 2026 · Corte clásico','Luis Paredes · S/ 35 · Yape','Pidió degradado más bajo a los lados.'],['done','14 sep 2026 · Corte + barba','Luis Paredes · S/ 50 · Tarjeta',''],['done','26 ago 2026 · Corte + barba','Diego Rojas · S/ 50 · Yape','Calificó 5 ★'],['nos','7 ago 2026 · Corte clásico','No asistió · depósito retenido S/ 10',''],['done','19 jul 2026 · Corte + barba + cejas','Luis Paredes · S/ 65 · Efectivo','']].map(h=>`<div class="tl-i ${h[0]==='done'?'done':''}"><span class="tl-d" style="${h[0]==='nos'?'background:var(--off-bg);border-color:var(--off)':''}">${h[0]==='done'?ic('chk',11):''}</span><div><b>${h[1]}</b><div class="muted sm">${h[2]}</div>${h[3]?`<div class="sm" style="margin-top:4px">${h[3]}</div>`:''}</div></div>`).join('')}</div>
+      <div class="stack">
+        <div style="border:1px solid var(--line);border-radius:12px;padding:14px" class="stack"><div class="row"><span class="b">Ficha de barbería</span><span class="tag t sp">Campos personalizados</span></div>
+          <dl class="dl"><dt>Tipo de corte</dt><dd>Fade bajo, tijera arriba</dd><dt>Largo de barba</dt><dd>Corta, perfilada</dd><dt>Tipo de cabello</dt><dd>Grueso, remolino en la coronilla</dd><dt>Producto</dt><dd>Cera mate</dd><dt>Alergias</dt><dd>Ninguna</dd></dl></div>
+        <div class="fld"><label for="nota">Nota interna</label><textarea class="inp" id="nota">Le gusta conversar de fútbol. Llega 5 min antes. Ofrecer paquete de 5 cortes.</textarea></div>
+        <div class="row sm muted">${ic('sig',15)} Consentimiento de datos firmado el 3 mar 2024</div>
+      </div>
+    </div>
+  </div>`};
+
+S.servicios={g:'Catálogo',l:'Servicios',i:'sc',c:'Catálogo / Servicios',r:()=>{
+  const sv=[['Corte clásico','Cortes',30,35,[0,2],1,'#575B9F'],['Corte + barba','Cortes',45,50,[0,2],1,'#575B9F'],['Afeitado con toalla','Barba',30,30,[0,2],1,'#5F8FC4'],['Tinte completo','Color',90,120,[1],1,'#7A7FC4'],['Tratamiento capilar','Tratamientos',50,70,[1],0,'#4FB7C6'],['Manicure','Uñas',40,40,[3],1,'#3E8FA6'],['Pedicure spa','Uñas',60,60,[3],1,'#3E8FA6']];
+  return `
+  <div class="row" style="justify-content:space-between"><div class="fchips">${['Todos · 14','Cortes','Barba','Color','Tratamientos','Uñas'].map((c,i)=>`<button class="fchip${i?'':' on'}" type="button">${c}</button>`).join('')}</div><button class="btn pri" type="button">${ic('plus',14)} Nuevo servicio</button></div>
+  <div class="grid gside">
+    <div class="cards">
+      ${sv.map((s,i)=>`<div class="card stack" style="padding:0;overflow:hidden;${i===1?'box-shadow:0 0 0 1.5px var(--teal),var(--shadow)':''}">
+        <div class="photo" style="border-radius:0;height:92px;background:linear-gradient(140deg,${s[6]},color-mix(in srgb,${s[6]} 55%,#1F2245))">${ic(s[1]==='Uñas'?'nail':s[1]==='Color'?'spark':s[1]==='Tratamientos'?'leaf':'sc',30)}</div>
+        <div class="stack" style="padding:0 16px 16px;gap:8px"><div class="row"><span class="b">${s[0]}</span><span class="tag o sp">${s[1]}</span></div>
+        <div class="row sm"><span class="pill-m">${ic('clock',12)} ${s[2]} min</span><span class="pill-m">S/ ${s[3]}</span></div>
+        <div class="row"><div class="avs">${s[4].map(k=>av(STAFF[k][0],STAFF[k][2],'s r')).join('')}</div><span class="muted sm sp">Reserva online</span>${tg(s[5])}</div></div>
+      </div>`).join('')}
+      <div class="dash-add"><div>Agregar servicio<span class="plus">+</span></div></div>
+    </div>
+    <div class="card stack" style="align-self:start">
+      <div class="card-h" style="margin:0"><h3>Editar servicio</h3><button class="icbtn" type="button" aria-label="Cerrar">${ic('x',16)}</button></div>
+      <div class="fld"><label for="sv-n">Nombre</label><input class="inp" id="sv-n" value="Corte + barba"></div>
+      <div class="grid g2e" style="gap:10px"><div class="fld"><label for="sv-d">Duración</label><input class="inp" id="sv-d" value="45 min"></div><div class="fld"><label for="sv-p">Precio</label><input class="inp" id="sv-p" value="S/ 50.00"></div>
+      <div class="fld"><label for="sv-b1">Buffer antes</label><input class="inp" id="sv-b1" value="0 min"></div><div class="fld"><label for="sv-b2">Buffer después</label><input class="inp" id="sv-b2" value="10 min"></div></div>
+      <div class="row" style="justify-content:space-between"><div><div class="b sm">Pedir depósito</div><div class="muted sm">30% al reservar online</div></div>${tg(1)}</div>
+      <div class="lbl">Profesionales que lo realizan</div>
+      <div class="lg">${STAFF.map((s,i)=>`<div class="row" style="flex-wrap:nowrap">${ck(i===0||i===2)}${av(s[0],s[2],'s r')}${s[0]}<span class="muted sm sp">${i===0?'S/ 55':i===2?'S/ 50':''}</span></div>`).join('')}</div>
+      <div class="lbl">Recurso necesario</div><div class="row"><span class="tag">Sillón de barbería</span><span class="tag o">+ Agregar</span></div>
+      <div class="lbl">Color en agenda</div><div class="row">${['#575B9F','#4FB7C6','#7A7FC4','#3E8FA6','#5F8FC4','#6FC3CF'].map((c,i)=>`<span class="swatch${i?'':' on'}" style="background:${c}"></span>`).join('')}</div>
+      <div class="row"><button class="btn dng" type="button">Archivar</button><button class="btn pri sp" type="button">Guardar cambios</button></div>
+    </div>
+  </div>`}};
+
+S.staff={g:'Catálogo',l:'Profesionales',i:'user',c:'Catálogo / Profesionales',r:()=>{
+  const st=[['Disponible','g'],['En cita','t'],['Ausente desde 17:30','w'],['En cita','t']];
+  const wk=[['Lun',[[9,13],[14,19]]],['Mar',[[9,13],[14,19]]],['Mié',[[9,13],[14,19]]],['Jue',[[11,15],[16,21]]],['Vie',[[11,15],[16,21]]],['Sáb',[[9,15]]],['Dom',null]];
+  const L=h=>((h-8)/14*100).toFixed(2);
+  return `
+  <div class="cards">
+    ${STAFF.map((s,i)=>`<div class="card stack" style="${i===0?'box-shadow:0 0 0 1.5px var(--teal),var(--shadow)':''}">
+      <div class="row" style="flex-wrap:nowrap">${av(s[0],s[2],'l r')}<div style="min-width:0"><div class="b">${s[0]}</div><div class="muted sm">${s[1]}</div></div></div>
+      <div class="row"><span class="tag ${st[i][1]}">${st[i][0]}</span><span class="muted sm sp">${[4.9,4.8,4.6,4.9][i]} ★</span></div>
+      <div><div class="row sm" style="justify-content:space-between"><span class="muted">Ocupación semanal</span><b>${[86,79,58,71][i]}%</b></div><div class="bar" style="margin-top:5px"><i style="width:${[86,79,58,71][i]}%"></i></div></div>
+      <div class="row sm muted"><span>${[6,8,5,4][i]} servicios</span><span>·</span><span>Comisión ${[45,40,40,35][i]}%</span></div>
+    </div>`).join('')}
+    <div class="dash-add" style="min-height:160px"><div>Agregar profesional<span class="plus">+</span></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-h"><h3>Horario semanal · Luis Paredes</h3><div class="row"><div class="seg"><button class="on" type="button">Miraflores</button><button type="button">San Isidro</button></div><button class="btn sm" type="button">Copiar a todos los días</button></div></div>
+      <div class="wk">
+        <span></span><div class="wk-ax">${[8,10,12,14,16,18,20,22].map(h=>`<span style="left:${L(h)}%">${h}h</span>`).join('')}</div><span></span>
+        ${wk.map(([d,r])=>`<span class="b">${d}</span><div class="wk-t">${r?r.map(([a,b])=>`<span class="wk-b" style="left:${L(a)}%;width:${(b-a)/14*100}%">${a}:00 – ${b}:00</span>`).join('')+(r.length>1?`<span class="wk-b br" style="left:${L(r[0][1])}%;width:${(r[1][0]-r[0][1])/14*100}%"></span>`:''):`<span class="wk-b off">Descanso</span>`}</div>${tg(!!r)}`).join('')}
+      </div>
+      <p class="muted sm" style="margin:14px 0 0">Arrastra los extremos de cada bloque para ajustar el horario. Las franjas rayadas son descansos.</p>
+    </div>
+    <div class="stack">
+      <div class="card"><div class="card-h"><h3>Ausencias y vacaciones</h3><button class="btn sm" type="button">${ic('plus',13)} Agregar</button></div>
+        <div class="lst">${[['Vacaciones','19 – 26 oct','w','Aprobado'],['Capacitación Wahl','4 nov · 9:00 – 13:00','t','Programado'],['Cita médica','12 nov · 16:00 – 18:00','o','Pendiente']].map(a=>`<div class="row" style="flex-wrap:nowrap"><div><div class="b sm">${a[0]}</div><div class="muted sm">${a[1]}</div></div><span class="tag ${a[2]} sp">${a[3]}</span></div>`).join('')}</div></div>
+      <div class="card"><div class="card-h"><h3>Este mes</h3></div><div class="grid g2e" style="gap:10px">${[['Citas atendidas','142'],['Facturado','S/ 6,980'],['Comisión','S/ 3,141'],['Clientes nuevos','18']].map(x=>`<div><div class="muted sm">${x[0]}</div><div class="b" style="font-size:16px">${x[1]}</div></div>`).join('')}</div></div>
+    </div>
+  </div>`}};
+
+S.recursos={g:'Catálogo',l:'Recursos',i:'box',c:'Catálogo / Recursos',r:()=>{
+  const rs=[['Sillón 1','Sillón de barbería',1,[[9,10.25],[10.5,11],[11.5,12.25],[15,16],[17,17.5]],'box'],['Sillón 2','Sillón de barbería',1,[[9.5,10],[10,10.75],[11,11.5],[16,16.75]],'box'],['Lavacabezas','Estación de lavado',1,[[9,9.5],[11,11.5],[14.5,15]],'leaf'],['Mesa de manicure','Estación de uñas',2,[[9,9.75],[12,12.75]],'nail'],['Sala de spa','Sala privada',1,[[10,11],[15.5,16.5]],'heart'],['Esterilizador UV','Equipo',1,[[9,19]],'zap']];
+  const L=h=>((h-9)/10*100).toFixed(2);
+  return `
+  <div class="row" style="justify-content:space-between"><p class="muted" style="margin:0;max-width:62ch">Los recursos son lo que una cita ocupa además del profesional: sillones, salas, camillas o equipos. Si un recurso está ocupado, ese horario no se ofrece.</p><div class="row"><div class="seg"><button class="on" type="button">Miraflores</button><button type="button">Todas</button></div><button class="btn pri" type="button">${ic('plus',14)} Nuevo recurso</button></div></div>
+  <div class="cards">
+    ${rs.map(r=>{const used=r[3].reduce((a,[x,y])=>a+y-x,0);const p=Math.min(100,Math.round(used/10*100));return `<div class="card stack">
+      <div class="row" style="flex-wrap:nowrap"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic(r[4],17)}</span><div><div class="b">${r[0]}</div><div class="muted sm">${r[1]}</div></div><button class="icbtn sp" type="button" aria-label="Opciones">${ic('dots')}</button></div>
+      <div class="row sm"><span class="pill-m">Capacidad ${r[2]}</span><span class="pill-m">${ic('pin',11)} Miraflores</span></div>
+      <div><div class="row sm" style="justify-content:space-between"><span class="muted">Uso hoy</span><b>${p}%</b></div>
+      <div class="wk-t" style="height:18px;margin-top:6px">${r[3].map(([a,b])=>`<span class="wk-b" style="left:${L(a)}%;width:${(b-a)/10*100}%;padding:0"></span>`).join('')}</div>
+      <div class="row muted" style="justify-content:space-between;font-size:9.5px;margin-top:3px"><span>9h</span><span>14h</span><span>19h</span></div></div>
+    </div>`}).join('')}
+    <div class="dash-add"><div>Agregar recurso<span class="plus">+</span></div></div>
+  </div>`}};
+
+S.sucursales={g:'Catálogo',l:'Sucursales',i:'store',c:'Catálogo / Sucursales',r:()=>`
+  <p class="ov">Mapa de sedes</p>
+  <div class="map">
+    <svg viewBox="0 0 900 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa con las tres sedes">
+      <rect width="900" height="300" fill="var(--map-bg)"/>
+      <path d="M0 230 C150 200 260 260 420 215 S700 160 900 190 L900 300 L0 300Z" fill="var(--map-water)"/>
+      <rect x="560" y="40" width="120" height="70" rx="10" fill="var(--map-park)"/><rect x="120" y="70" width="80" height="60" rx="10" fill="var(--map-park)"/>
+      <g stroke="var(--map-road)" stroke-width="7" fill="none">${[40,90,140,190].map(y=>`<path d="M0 ${y} L900 ${y-15}"/>`).join('')}${[80,200,330,460,590,720,840].map(x=>`<path d="M${x} 0 L${x+25} 300"/>`).join('')}</g>
+      <path d="M0 160 C200 140 400 120 900 60" stroke="var(--map-road2)" stroke-width="10" fill="none"/>
+      ${[[350,150,'var(--bad)'],[640,120,'#575B9F'],[770,175,'#575B9F']].map(([x,y,c])=>`<g transform="translate(${x} ${y})"><path d="M0 0 C-12 -14 -14 -20 -14 -26 a14 14 0 0 1 28 0 c0 6 -2 12 -14 26z" fill="${c}"/><circle cy="-26" r="5" fill="#fff"/></g>`).join('')}
+    </svg>
+    <div class="mpop" style="left:calc(39% - 220px);top:12%"><div class="photo">Miraflores</div><div><div class="b">Barbería Norte · Miraflores</div><div class="muted sm">${ic('pin',11)} Av. Larco 812</div><div class="sm"><b>14</b> citas hoy · 82%</div></div></div>
+  </div>
+  <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(330px,1fr))">
+    ${[['Miraflores','Av. Larco 812, Miraflores','9:00 – 20:00','14 citas · 82%',1],['San Isidro','Calle Las Begonias 455, San Isidro','10:00 – 21:00','11 citas · 74%',0],['Surco','Av. Primavera 1290, Santiago de Surco','9:00 – 19:00','13 citas · 69%',0]].map(b=>`<div class="br-c${b[4]?' on':''}"><div class="photo">${b[0]}</div><div class="br-b">
+      <div class="b" style="font-size:13px">Barbería Norte · ${b[0]}</div>
+      <div class="lbl">Dirección</div><div class="muted">${b[1]}</div>
+      <div class="lbl">Horario</div><div class="muted">Lun – Sáb · ${b[2]}</div>
+      <div class="lbl">Hoy</div><div class="b">${b[3]}</div>
+      <div class="row" style="margin-top:auto;padding-top:6px"><button class="btn sm" type="button" style="flex:1">Editar</button><button class="btn pri sm" type="button" style="flex:1">Ver</button></div></div></div>`).join('')}
+    <div class="dash-add"><div>Agregar sucursal<span class="plus">+</span></div></div>
+  </div>`};
+
+S.pagos={g:'Negocio',l:'Pagos',i:'card',c:'Negocio / Pagos',r:()=>`
+  <div class="kpis">${kpi('cash','Cobrado este mes','S/ 48,920','+12% vs. septiembre',1)}${kpi('clock','Pendiente','S/ 1,240','9 citas por cobrar')}${kpi('lock','Depósitos retenidos','S/ 2,310','Se aplican al cobrar')}${kpi('refresh','Reembolsos','S/ 180','3 este mes')}</div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-h"><h3>Transacciones</h3><div class="row"><div class="fchips"><button class="fchip on" type="button">Todas</button><button class="fchip" type="button">Depósitos</button><button class="fchip" type="button">Pendientes</button><button class="fchip" type="button">Reembolsos</button></div><button class="btn sm" type="button">${ic('dl',13)} Exportar</button></div></div>
+      <div class="tw"><table><thead><tr><th>Cliente</th><th>Concepto</th><th>Método</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>
+        ${[['Valeria Ríos','Tinte completo','Tarjeta','Hoy 10:42','S/ 120.00','Pagado','g'],['Mateo Huamán','Depósito · Corte + barba + cejas','Yape','Hoy 09:15','S/ 20.00','Depósito','t'],['Carlos Ramos','Corte + barba','Efectivo','Hoy 10:50','S/ 50.00','Pagado','g'],['Renato Chávez','Corte + barba','—','Hoy 10:20','S/ 50.00','Pendiente','w'],['Daniela Flores','Paquete 5 manicures','Plin','Ayer 18:03','S/ 180.00','Pagado','g'],['Hugo Silva','Depósito · Corte clásico','Yape','Ayer 12:30','S/ 10.00','Reembolsado','r'],['Fernanda Salazar','Membresía Club Norte','Tarjeta','5 oct','S/ 99.00','Pagado','g']].map(t=>`<tr><td><div class="who">${av(t[0],cc(t[0]),'s r')}${t[0]}</div></td><td>${t[1]}</td><td><span class="pill-m">${t[2]}</span></td><td class="muted">${t[3]}</td><td class="b">${t[4]}</td><td><span class="tag ${t[6]}">${t[5]}</span></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="stack">
+      <div class="card"><div class="card-h"><h3>Métodos de cobro</h3></div><div class="lst">
+        ${[['Yape / Plin','QR en recepción y link de pago',1],['Tarjeta en línea','Depósitos al reservar por la web',1],['POS en local','Débito y crédito',1],['Efectivo','Se registra al cerrar caja',1],['Transferencia','Solo para paquetes y membresías',0]].map(m=>`<div class="row" style="flex-wrap:nowrap"><div><div class="b sm">${m[0]}</div><div class="muted sm">${m[1]}</div></div><span class="sp">${tg(m[2])}</span></div>`).join('')}
+      </div></div>
+      <div class="card stack"><h3 style="margin:0;font-size:14px">Política de depósito</h3>
+        <div class="val">30% del servicio, mínimo S/ 10</div>
+        <div class="row sm" style="justify-content:space-between"><span>Retener si no asiste</span>${tg(1)}</div>
+        <div class="row sm" style="justify-content:space-between"><span>Devolver si cancela con +12 h</span>${tg(1)}</div>
+      </div>
+    </div>
+  </div>`};
+
+S.promos={g:'Negocio',l:'Promociones',i:'tag',c:'Negocio / Promociones',r:()=>`
+  <div class="row" style="justify-content:space-between"><div class="tabs" style="border:0"><button class="on" type="button">Cupones</button><button type="button">Paquetes</button><button type="button">Membresías</button><button type="button">Gift cards</button><button type="button">Puntos</button></div><button class="btn pri" type="button">${ic('plus',14)} Nueva promoción</button></div>
+  <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">
+    ${[['15%','dscto','OCTUBRE15','Todos los servicios de corte','Vence 31 oct',62,100,'Activo','g'],['S/ 20','dscto','BIENVENIDO','Primera visita, clientes nuevos','Sin vencimiento',148,null,'Activo','g'],['2x1','martes','MARTESDUO','Corte clásico, solo martes 9–13 h','Vence 30 nov',19,50,'Activo','g'],['25%','dscto','CUMPLE25','Automático en el mes del cumpleaños','Automático',33,null,'Automático','t']].map(c=>`<div class="tk"><div class="tk-l">${c[0]}<small>${c[1]}</small></div><div class="tk-r">
+      <div class="row"><span class="code">${c[2]}</span><span class="tag ${c[8]} sp">${c[7]}</span></div><div class="sm">${c[3]}</div>
+      <div class="row muted sm"><span>${c[4]}</span><span class="sp">${c[5]}${c[6]?' / '+c[6]:''} usos</span></div>
+      ${c[6]?`<div class="bar"><i style="width:${c[5]/c[6]*100}%"></i></div>`:''}</div></div>`).join('')}
+  </div>
+  <div class="grid g3">
+    <div class="card stack"><div class="row"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('box',17)}</span><div><div class="b">Paquete 5 cortes</div><div class="muted sm">Paquete · válido 90 días</div></div></div><div class="row"><span style="font-size:22px;font-weight:600">S/ 150</span><span class="muted sm" style="text-decoration:line-through">S/ 175</span><span class="tag g">Ahorra 14%</span></div><div class="muted sm">38 vendidos · 112 sesiones por usar</div></div>
+    <div class="card stack" style="background:var(--grad);color:#fff"><div class="row"><span class="av" style="background:rgba(255,255,255,.2)">${ic('spark',17)}</span><div><div class="b">Club Norte</div><div class="sm" style="opacity:.85">Membresía mensual</div></div></div><div style="font-size:22px;font-weight:600">S/ 99 <span class="sm" style="font-weight:500">/ mes</span></div><div class="sm">2 cortes al mes · 10% en productos · reserva prioritaria</div><div class="sm" style="opacity:.85">64 miembros activos</div></div>
+    <div class="card stack"><div class="row"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('gift',17)}</span><div><div class="b">Gift card</div><div class="muted sm">Montos de S/ 50 a S/ 300</div></div></div><div style="font-size:22px;font-weight:600">21 <span class="sm muted" style="font-weight:500">vendidas en 2026</span></div><div class="muted sm">S/ 2,450 en saldo sin usar</div></div>
+  </div>`};
+
+S.auto={g:'Negocio',l:'Automatizaciones',i:'zap',c:'Negocio / Automatizaciones',r:()=>`
+  <div class="grid g-auto">
+    <div class="card" style="padding:12px">
+      <div class="row" style="padding:6px 8px 10px"><h3 style="margin:0;font-size:14px">Flujos</h3><button class="btn sm sp" type="button">${ic('plus',13)}</button></div>
+      ${[['Recordatorio 24 h antes','WhatsApp · 1,204 enviados',1,1],['Confirmación al reservar','WhatsApp + email',1],['Pedir reseña','2 h después · 61% abren',1],['Reactivar clientes','Sin visita en 45 días',1],['Feliz cumpleaños','Cupón CUMPLE25',1],['Aviso de no-show','Al marcar No asistió',0]].map(f=>`<div class="fl-i${f[3]?' on':''}"><div style="min-width:0"><div class="b sm">${f[0]}</div><div class="muted sm">${f[1]}</div></div>${tg(f[2])}</div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Recordatorio 24 h antes</h3><div class="row"><span class="tag g">Activo</span><button class="btn sm" type="button">Probar</button></div></div>
+      <div class="flow">
+        ${[['Disparador','Faltan 24 horas para la cita','Todas las sucursales','zap','var(--teal)','var(--teal-soft)'],['Condición','La cita sigue Pendiente o Confirmada','Y el cliente aceptó mensajes','filter','var(--warn)','var(--warn-bg)'],['Acción','Enviar WhatsApp «Recordatorio de cita»','Con botones Confirmar / Reprogramar','msg','var(--ok)','var(--ok-bg)'],['Esperar','6 horas','','clock','var(--off)','var(--off-bg)'],['Si no respondió','Enviar SMS de respaldo','Y marcar la cita «Sin confirmar»','phone','var(--info)','var(--info-bg)']].map((n,i,a)=>`<div class="node${i===2?' on':''}"><span class="nic" style="color:${n[4]};background:${n[5]}">${ic(n[3],16)}</span><div><div class="nt" style="color:${n[4]}">${n[0]}</div><div class="b sm">${n[1]}</div>${n[2]?`<div class="muted sm">${n[2]}</div>`:''}</div><button class="icbtn" type="button" aria-label="Editar paso">${ic('edit',15)}</button></div>${i<a.length-1?'<span class="conn"></span><button class="cadd" type="button" aria-label="Agregar paso">'+ic('plus',12)+'</button><span class="conn"></span>':''}`).join('')}
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card stack"><div class="lbl">Plantilla del mensaje</div>
+        <div class="sm" style="line-height:1.7">Hola <span class="var">{{cliente.nombre}}</span>, te recordamos tu cita de <span class="var">{{servicio}}</span> mañana a las <span class="var">{{cita.hora}}</span> con <span class="var">{{profesional}}</span> en <span class="var">{{sucursal.direccion}}</span>.</div>
+        <div class="row" style="gap:5px">${['{{cliente.nombre}}','{{cita.fecha}}','{{link.reprogramar}}'].map(v=>`<span class="tag o">${v}</span>`).join('')}</div>
+      </div>
+      <div class="phone"><div class="ph-bar"><span>9:41</span><span>5G</span></div><div class="wa" style="min-height:330px">
+        <div class="wa-h">${av('Barbería Norte','#1F2245','s r')}Barbería Norte</div>
+        <div class="bub">Hola Mateo, te recordamos tu cita de <b>Corte + barba + cejas</b> mañana a las <b>15:00</b> con Luis en Av. Larco 812.<small>18:00</small><span class="qr">Confirmar</span><span class="qr">Reprogramar</span></div>
+        <div class="bub me">Confirmar<small>18:04 ✓✓</small></div>
+        <div class="bub">¡Listo! Te esperamos mañana.<small>18:04</small></div>
+      </div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-h"><h3>Registro de envíos</h3><span class="muted sm">Últimas 24 h · 98% entregados</span></div>
+    <div class="tw"><table><thead><tr><th>Cliente</th><th>Flujo</th><th>Canal</th><th>Hora</th><th>Estado</th></tr></thead><tbody>
+      ${[['Mateo Huamán','Recordatorio 24 h','WhatsApp','Ayer 18:00','Leído','g'],['Lucía Mendoza','Confirmación al reservar','Email','Ayer 16:22','Entregado','t'],['Iván Medina','Recordatorio 24 h','WhatsApp','Ayer 18:00','Respondió: Confirmar','g'],['Bruno Alvarado','Recordatorio 24 h','SMS','Hoy 00:00','Sin respuesta','w'],['Pablo Núñez','Recordatorio 24 h','WhatsApp','Ayer 18:00','Falló: número inválido','r']].map(r=>`<tr><td><div class="who">${av(r[0],cc(r[0]),'s r')}${r[0]}</div></td><td>${r[1]}</td><td><span class="pill-m">${r[2]}</span></td><td class="muted">${r[3]}</td><td><span class="tag ${r[5]}">${r[4]}</span></td></tr>`).join('')}
+    </tbody></table></div></div>`};
+
+function qr(){let s=7,c='';const rnd=()=>(s=(s*9301+49297)%233280)/233280;const fin=(x,y)=>{for(const[fx,fy]of[[0,0],[14,0],[0,14]]){const dx=x-fx,dy=y-fy;if(dx>=0&&dx<7&&dy>=0&&dy<7)return(dx===0||dx===6||dy===0||dy===6||(dx>=2&&dx<=4&&dy>=2&&dy<=4))?1:0}return-1};for(let y=0;y<21;y++)for(let x=0;x<21;x++){const f=fin(x,y);const on=f===-1?rnd()>.5:f;c+=`<i style="${on?'':'background:transparent'}"></i>`}return `<div class="qr" role="img" aria-label="Código QR de la página de reservas">${c}</div>`}
+
+S.web={g:'Negocio',l:'Página de reservas',i:'globe',c:'Negocio / Página de reservas',r:()=>`
+  <div class="grid g-web">
+    <div class="stack">
+      <div class="card stack">
+        <div class="card-h" style="margin:0"><h3>Tu enlace público</h3><span class="tag g">Publicada</span></div>
+        <div class="row" style="flex-wrap:nowrap"><input class="inp" id="url" value="ubook.app/barberianorte" readonly><button class="btn" type="button" id="copyUrl">${ic('copy',14)} Copiar</button></div>
+        <div class="row" style="align-items:flex-start;gap:18px">${qr()}<div class="stack" style="flex:1;min-width:200px"><div class="sm">Pon el QR en el espejo, la vitrina o tus tarjetas. También puedes agregar el botón «Reservar» a Instagram, Google Maps o a tu web con el widget.</div><div class="row"><button class="btn sm" type="button">Descargar QR</button><button class="btn sm" type="button">Código del widget</button></div></div></div>
+      </div>
+      <div class="card stack">
+        <h3 style="margin:0;font-size:14px">Apariencia</h3>
+        <div class="grid g2e" style="gap:14px">
+          <div class="fld"><span class="lbl">Logo</span><div class="row"><div class="biz-logo" style="width:44px;height:44px;font-size:9px">NORTE</div><button class="btn sm" type="button">Cambiar</button></div></div>
+          <div class="fld"><span class="lbl">Color principal</span><div class="row">${['#575B9F','#4FB7C6','#1F2245','#3E8FA6','#7A7FC4'].map((c,i)=>`<span class="swatch${i?'':' on'}" style="background:${c}"></span>`).join('')}</div></div>
+          <div class="fld"><label for="w-t">Mensaje de bienvenida</label><input class="inp" id="w-t" value="Reserva tu corte en menos de un minuto"></div>
+          <div class="fld"><label for="w-p">Portada</label><select class="inp" id="w-p"><option>Foto del local</option><option>Degradado de marca</option></select></div>
+        </div>
+      </div>
+      <div class="card stack">
+        <h3 style="margin:0;font-size:14px">Qué ve el cliente</h3>
+        ${[['Mostrar precios',1],['Permitir elegir profesional',1],['Mostrar reseñas',1],['Pedir depósito al reservar',1],['Pedir email (además del celular)',0],['Reservar sin crear cuenta',1]].map(o=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="sm">${o[0]}</span>${tg(o[1])}</div>`).join('')}
+      </div>
+    </div>
+    <div style="position:sticky;top:20px;align-self:start" class="stack">
+      <div class="lbl" style="text-align:center">Vista previa en celular</div>
+      <div class="phone"><div class="ph-bar"><span>9:41</span><span>5G</span></div>
+        <div class="photo" style="border-radius:0;height:96px;font-size:14px">Barbería Norte</div>
+        <div class="pb">
+          <div><div class="b" style="font-size:14px">Barbería Norte</div><div class="muted sm">${ic('pin',11)} Miraflores · 4.9 ★ (312)</div></div>
+          <div class="sm b">Reserva tu corte en menos de un minuto</div>
+          <div class="row" style="gap:5px"><span class="fchip on" style="padding:3px 9px;font-size:10px">Cortes</span><span class="fchip" style="padding:3px 9px;font-size:10px">Barba</span><span class="fchip" style="padding:3px 9px;font-size:10px">Color</span></div>
+          ${[['Corte clásico','30 min','S/ 35'],['Corte + barba','45 min','S/ 50'],['Afeitado con toalla','30 min','S/ 30']].map(s=>`<div class="pb-s"><div><div class="b">${s[0]}</div><div class="muted" style="font-size:10px">${s[1]} · ${s[2]}</div></div><span class="btn pri sm" style="padding:4px 9px">Reservar</span></div>`).join('')}
+          <div class="muted" style="font-size:9.5px;text-align:center;margin-top:auto">Reservas con uBook</div>
+        </div>
+      </div>
+    </div>
+  </div>`};
+
+S.reportes={g:'Negocio',l:'Reportes',i:'chart',c:'Negocio / Reportes',r:()=>{
+  const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],hrs=[9,10,11,12,13,14,15,16,17,18,19,20];
+  const v=(d,h)=>{if(d===6)return h<15?.25+.1*Math.sin(h):0.05;let b=.35+.12*d;if(h>=17&&h<=19)b+=.35;if(h===13)b-=.25;if(h<=10)b-=.1;if(d===5&&h<16)b+=.3;return Math.max(.05,Math.min(1,b))};
+  const sv=[['Corte + barba',14200],['Corte clásico',11850],['Tinte completo',7680],['Pedicure spa',4920],['Manicure',4360],['Tratamiento capilar',3150]];const mx=sv[0][1];
+  const pts=[8.1,7.4,7.9,6.8,6.2,5.9,5.4,5.6,5.1,4.8,4.6,4.2];const W=300,H=90,px=i=>10+i*(W-20)/11,py=x=>H-10-(x-4)/5*(H-20);
+  return `
+  <div class="row" style="justify-content:space-between"><div class="seg"><button type="button">7 días</button><button class="on" type="button">30 días</button><button type="button">Trimestre</button><button type="button">Año</button></div><div class="row"><select class="inp" style="width:auto" aria-label="Sucursal"><option>Todas las sucursales</option></select><button class="btn" type="button">${ic('dl',14)} Exportar</button></div></div>
+  <div class="kpis">${kpi('cash','Ingresos','S/ 48,920','+12% vs. periodo anterior',1)}${kpi('calc','Citas atendidas','1,062','+8%')}${kpi('chart','Ocupación promedio','76%','+4 pts')}${kpi('x','Tasa de no-show','4.2%','−1.1 pts con recordatorios')}${kpi('refresh','Retención 60 días','68%','+3 pts')}</div>
+  <div class="grid g2">
+    <div class="card"><div class="card-h"><h3>Ocupación por día y hora</h3><span class="muted sm">Más oscuro = más lleno</span></div>
+      <div class="tw"><div class="hm"><span></span>${hrs.map(h=>`<span>${h}h</span>`).join('')}${days.map((d,di)=>`<span style="justify-content:flex-start">${d}</span>${hrs.map(h=>{const x=v(di,h);return `<i title="${d} ${h}:00 · ${Math.round(x*100)}%" style="background:color-mix(in srgb,var(--brand) ${Math.round(x*100)}%,var(--surface-2))"></i>`}).join('')}`).join('')}</div></div>
+      <p class="muted sm" style="margin:12px 0 0">Los martes y miércoles por la mañana tienen menos de 40% de ocupación. Buen momento para una promoción como MARTESDUO.</p>
+    </div>
+    <div class="card"><div class="card-h"><h3>Tasa de no-show</h3><span class="tag g">−3.9 pts en 12 meses</span></div>
+      <svg viewBox="0 0 ${W} ${H+16}" width="100%" role="img" aria-label="La tasa de no-show bajó de 8.1% a 4.2% en 12 meses">
+        ${[4,6,8].map(y=>`<line x1="10" x2="${W-10}" y1="${py(y)}" y2="${py(y)}" stroke="var(--line)"/><text x="${W-8}" y="${py(y)-3}" font-size="8" fill="var(--muted)" text-anchor="end">${y}%</text>`).join('')}
+        <path d="M${pts.map((p,i)=>`${px(i)} ${py(p)}`).join(' L')} L${px(11)} ${H-10} L${px(0)} ${H-10}Z" fill="var(--teal-soft)"/>
+        <path d="M${pts.map((p,i)=>`${px(i)} ${py(p)}`).join(' L')}" fill="none" stroke="var(--teal)" stroke-width="2"/>
+        <circle cx="${px(11)}" cy="${py(4.2)}" r="4" fill="var(--teal)"/>
+        <text x="${px(0)}" y="${H+12}" font-size="8" fill="var(--muted)">Nov 2025</text><text x="${px(11)}" y="${H+12}" font-size="8" fill="var(--muted)" text-anchor="end">Oct 2026</text>
+      </svg>
+    </div>
+  </div>
+  <div class="grid g2e">
+    <div class="card"><div class="card-h"><h3>Ingresos por servicio</h3></div><div class="stack">${sv.map(s=>`<div class="hbar"><span class="sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s[0]}</span><div class="bar"><i style="width:${s[1]/mx*100}%"></i></div><b class="sm" style="text-align:right;font-variant-numeric:tabular-nums">S/ ${s[1].toLocaleString('en-US')}</b></div>`).join('')}</div></div>
+    <div class="card"><div class="card-h"><h3>Rendimiento por profesional</h3></div><div class="tw"><table><thead><tr><th>Profesional</th><th>Citas</th><th>Ingresos</th><th>Ocupación</th><th>Calificación</th></tr></thead><tbody>
+      ${STAFF.map((s,i)=>`<tr><td><div class="who">${av(s[0],s[2],'s r')}${s[0]}</div></td><td>${[312,248,276,226][i]}</td><td>S/ ${['15,840','14,120','10,930','8,030'][i]}</td><td>${[86,79,58,71][i]}%</td><td>${[4.9,4.8,4.6,4.9][i]} ★</td></tr>`).join('')}
+    </tbody></table></div></div>
+  </div>`}};
+
+S.reglas={g:'Ajustes',l:'Disponibilidad',i:'clock',c:'Ajustes / Disponibilidad',r:()=>`
+  <p class="muted" style="margin:0;max-width:70ch">Estas reglas deciden qué horarios se ofrecen al cliente. Cada sucursal puede tener sus propias reglas; los servicios pueden sobrescribirlas.</p>
+  <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+    ${[['clock','Anticipación mínima','No se puede reservar con menos de este tiempo.','2 horas',1],['cal','Ventana de reserva','Hasta cuántos días adelante se puede reservar.','60 días',1],['x','Cancelación gratuita','Después de este límite se retiene el depósito.','12 horas antes',1],['refresh','Reprogramación','Cuántas veces el cliente puede mover su cita.','Hasta 2 veces',1],['box','Buffer entre citas','Tiempo de limpieza por defecto.','10 minutos',1],['user','Límite por cliente','Citas activas al mismo tiempo.','3 citas',0],['users','Sobreventa','Permitir 2 citas en el mismo horario si hay recurso libre.','Desactivado',0],['shield','Aprobación manual','Las reservas web quedan Pendientes hasta aprobarlas.','Solo clientes nuevos',1]].map(r=>`<div class="card rule"><div class="rule-h"><span class="ri">${ic(r[0],16)}</span><div style="flex:1"><div class="b">${r[1]}</div><p>${r[2]}</p></div>${tg(r[4])}</div><div class="val">${r[3]}<span class="sp muted">${ic('cd',14)}</span></div></div>`).join('')}
+  </div>
+  <div class="grid g2">
+    <div class="card"><div class="card-h"><h3>Horario de atención · Miraflores</h3><button class="btn sm" type="button">Copiar a otra sucursal</button></div>
+      <div class="tw"><table><thead><tr><th>Día</th><th>Abierto</th><th>Apertura</th><th>Cierre</th><th>Pausa</th></tr></thead><tbody>
+        ${[['Lunes',1,'9:00','20:00','—'],['Martes',1,'9:00','20:00','—'],['Miércoles',1,'9:00','20:00','—'],['Jueves',1,'9:00','21:00','—'],['Viernes',1,'9:00','21:00','—'],['Sábado',1,'9:00','18:00','—'],['Domingo',0,'—','—','—']].map(d=>`<tr><td class="b">${d[0]}</td><td>${tg(d[1])}</td><td>${d[2]}</td><td>${d[3]}</td><td class="muted">${d[4]}</td></tr>`).join('')}
+      </tbody></table></div></div>
+    <div class="card"><div class="card-h"><h3>Feriados y excepciones</h3><button class="btn sm" type="button">${ic('plus',13)} Agregar</button></div>
+      <div class="lst">${[['8 oct','Combate de Angamos','Cerrado','r'],['31 oct','Halloween','Hasta las 16:00','w'],['1 nov','Día de Todos los Santos','Cerrado','r'],['8 dic','Inmaculada Concepción','Cerrado','r'],['24 dic','Nochebuena','9:00 – 22:00','g'],['25 dic','Navidad','Cerrado','r']].map(f=>`<div class="row" style="flex-wrap:nowrap"><span class="pill-m" style="width:56px;justify-content:center">${f[0]}</span><span class="sm b">${f[1]}</span><span class="tag ${f[3]} sp">${f[2]}</span></div>`).join('')}</div></div>
+  </div>`};
+
+S.config={g:'Ajustes',l:'Configuración',i:'sl',c:'Ajustes / Configuración',r:()=>`
+  <div class="tabs" id="cfgTabs"><button class="on" type="button" data-t="0">Campos personalizados</button><button type="button" data-t="1">Roles y permisos</button><button type="button" data-t="2">Terminología</button></div>
+  <div data-p="0" class="grid g-cf">
+    <div class="card stack"><div class="lbl">Arrastra un tipo de campo</div>${[['txt','Texto corto'],['list','Texto largo'],['hash','Número'],['sel','Lista de opciones'],['chk','Casilla Sí / No'],['cal','Fecha'],['file','Archivo o foto'],['sig','Firma']].map(t=>`<div class="fb-type">${ic(t[0],15)}${t[1]}</div>`).join('')}</div>
+    <div class="card stack">
+      <div class="card-h" style="margin:0"><h3>Ficha del cliente</h3><div class="seg"><button class="on" type="button">Cliente</button><button type="button">Cita</button><button type="button">Servicio</button></div></div>
+      ${[['Tipo de corte','Lista de opciones','Requerido',0],['Largo de barba','Lista de opciones','',0],['Tipo de cabello','Texto corto','',1],['Alergias','Texto largo','Requerido',0],['Foto de referencia','Archivo o foto','',0],['Acepta fotos para redes','Casilla Sí / No','',0]].map(f=>`<div class="fb-f${f[3]?' on':''}"><span class="grip">${ic('grip',14)}</span><div><div class="b sm">${f[0]}</div><div class="muted sm">${f[1]}</div></div>${f[2]?'<span class="tag w">Requerido</span>':'<span></span>'}</div>`).join('')}
+      <div class="fb-type" style="justify-content:center;color:var(--muted)">Suelta aquí para agregar un campo</div>
+    </div>
+    <div class="card stack"><h3 style="margin:0;font-size:14px">Propiedades</h3>
+      <div class="fld"><label for="cf-n">Etiqueta</label><input class="inp" id="cf-n" value="Tipo de cabello"></div>
+      <div class="fld"><label for="cf-h">Texto de ayuda</label><input class="inp" id="cf-h" value="Ej.: grueso, fino, rizado"></div>
+      ${[['Obligatorio',0],['Visible para el cliente al reservar',0],['Solo lo ven profesionales',1],['Mostrar en la tarjeta de la cita',1]].map(o=>`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="sm">${o[0]}</span>${tg(o[1])}</div>`).join('')}
+      <button class="btn dng" type="button">Eliminar campo</button>
+    </div>
+  </div>
+  <div data-p="1" class="card" hidden>
+    <div class="card-h"><h3>Permisos por rol</h3><button class="btn pri sm" type="button">${ic('plus',13)} Nuevo rol</button></div>
+    <div class="tw"><table><thead><tr><th>Módulo / acción</th><th>Dueño</th><th>Administrador</th><th>Recepción</th><th>Profesional</th></tr></thead><tbody>
+      ${[['Ver agenda de todos',1,1,1,0],['Crear y mover citas',1,1,1,1],['Cancelar citas',1,1,1,0],['Ver datos de contacto del cliente',1,1,1,0],['Ver ficha clínica / notas',1,1,0,1],['Cobrar',1,1,1,0],['Hacer reembolsos',1,1,0,0],['Editar servicios y precios',1,1,0,0],['Ver reportes de ingresos',1,1,0,0],['Configurar automatizaciones',1,0,0,0],['Gestionar roles y usuarios',1,0,0,0]].map(r=>`<tr><td class="b">${r[0]}</td>${r.slice(1).map(v=>`<td>${ck(v)}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>
+  </div>
+  <div data-p="2" class="grid g2" hidden>
+    <div class="card stack"><div class="card-h" style="margin:0"><h3>Cómo se llaman las cosas en tu negocio</h3></div>
+      <p class="muted sm" style="margin:0">uBook usará estas palabras en toda la plataforma, en la página de reservas y en los mensajes.</p>
+      ${[['Profesional','Barbero'],['Cita','Turno'],['Cliente','Cliente'],['Servicio','Servicio'],['Recurso','Sillón'],['Sucursal','Sede']].map((t,i)=>`<div class="term"><input class="inp" value="${t[0]}" readonly aria-label="Término original"><span class="muted">${ic('cr',16)}</span><input class="inp" id="term${i}" value="${t[1]}" aria-label="Cómo lo llamas"></div>`).join('')}
+    </div>
+    <div class="card stack"><div class="lbl">Así lo verán tus clientes</div>
+      <div class="pick"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('user',16)}</span><div><div class="b">Elige tu barbero</div><div class="muted sm">En lugar de «Elige tu profesional»</div></div></div>
+      <div class="pick"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('calc',16)}</span><div><div class="b">Tu turno está confirmado</div><div class="muted sm">En lugar de «Tu cita está confirmada»</div></div></div>
+      <div class="pick"><span class="av" style="background:var(--brand-soft);color:var(--brand)">${ic('store',16)}</span><div><div class="b">Sede Miraflores</div><div class="muted sm">En lugar de «Sucursal Miraflores»</div></div></div>
+    </div>
+  </div>`};
+
+S.onb={g:'Plataforma',l:'Onboarding',i:'flag',c:'Registro / Tu negocio',r:()=>`
+  <div class="steps">${['Tu cuenta','Tipo de negocio','Sucursal','Servicios','Equipo','Listo'].map((s,i)=>`<div class="step ${i<1?'done':i===1?'act':''}"><span class="n">${i<1?ic('chk',12):i+1}</span>${s}</div>`).join('')}</div>
+  <div class="grid gside">
+    <div class="card stack" style="gap:18px">
+      <div><h2 style="margin:0 0 6px;font-size:22px">¿Qué tipo de negocio tienes?</h2><p class="muted" style="margin:0">Preconfiguramos servicios, campos y reglas típicas. Luego puedes cambiar todo.</p></div>
+      <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        ${[['sc','Barbería','Cortes, barba, afeitado',1],['spark','Salón de belleza','Color, peinados, tratamientos'],['nail','Estudio de uñas','Manicure, pedicure, gel'],['brain','Psicología','Sesiones, ficha clínica'],['tooth','Odontología','Consultas, tratamientos'],['leaf','Spa','Masajes, salas, paquetes'],['dumb','Entrenador','Clases, grupos, membresías'],['dots','Otro','Empieza en blanco']].map(v=>`<button class="vt${v[3]?' on':''}" type="button"><span class="vi">${ic(v[0],20)}</span><span class="b">${v[1]}</span><span class="muted sm">${v[2]}</span></button>`).join('')}
+      </div>
+      <div class="row"><button class="btn" type="button">${ic('cl',14)} Atrás</button><button class="btn pri sp" type="button">Continuar ${ic('cr',14)}</button></div>
+    </div>
+    <div class="card stack" style="align-self:start"><h3 style="margin:0;font-size:14px">Para una barbería prepararemos</h3>
+      <div class="tl">${[['8 servicios','Corte clásico, Corte + barba, Afeitado…'],['Ficha de cliente','Tipo de corte, largo de barba, producto'],['Recursos','Sillones de barbería'],['Reglas','Buffer de 10 min · cancelación 12 h'],['Mensajes','Recordatorio 24 h y pedido de reseña'],['Palabras','Profesional → Barbero, Cita → Turno']].map(x=>`<div class="tl-i done"><span class="tl-d">${ic('chk',11)}</span><div><b>${x[0]}</b><div class="muted sm">${x[1]}</div></div></div>`).join('')}</div>
+    </div>
+  </div>`};
+
+S.admin={g:'Plataforma',l:'Superadmin',i:'bld',c:'Unify Tec / Superadmin',r:()=>`
+  <div class="kpis">${kpi('cash','MRR','US$ 18,420','+9.4% mensual',1)}${kpi('bld','Negocios activos','412','+31 este mes')}${kpi('calc','Citas este mes','86,310','En toda la plataforma')}${kpi('refresh','Churn mensual','2.1%','−0.4 pts')}${kpi('msg','Mensajes enviados','214k','WhatsApp 81%')}</div>
+  <div class="grid g2">
+    <div class="card"><div class="card-h"><h3>Negocios</h3><div class="row"><div class="fchips"><button class="fchip on" type="button">Todos</button><button class="fchip" type="button">En prueba</button><button class="fchip" type="button">Pago vencido</button></div></div></div>
+      <div class="tw"><table><thead><tr><th>Negocio</th><th>Tipo</th><th>Plan</th><th>Sedes</th><th>Citas/mes</th><th>MRR</th><th>Estado</th></tr></thead><tbody>
+        ${[['Barbería Norte','Barbería','Pro',3,'1,062','US$ 89','Activo','g'],['Studio Nails Lima','Uñas','Starter',1,'418','US$ 29','Activo','g'],['Clínica Sonríe','Odontología','Pro',2,'736','US$ 89','Activo','g'],['Mente Clara','Psicología','Starter',1,'164','US$ 29','En prueba · 9 días','t'],['Spa Ayni','Spa','Business',5,'2,310','US$ 249','Activo','g'],['FitBox Surco','Entrenador','Starter',1,'512','US$ 29','Pago vencido','r'],['Glam Salón','Salón','Pro',2,'884','US$ 89','Activo','g']].map(t=>`<tr><td><div class="who">${av(t[0],'#575B9F','s')}${t[0]}</div></td><td>${t[1]}</td><td><span class="tag">${t[2]}</span></td><td>${t[3]}</td><td>${t[4]}</td><td>${t[5]}</td><td><span class="tag ${t[7]}">${t[6]}</span></td></tr>`).join('')}
+      </tbody></table></div></div>
+    <div class="stack">
+      <div class="card"><div class="card-h"><h3>Negocios por plan</h3></div><div class="stack">${[['Starter',198,'US$ 29'],['Pro',171,'US$ 89'],['Business',43,'US$ 249']].map(p=>`<div><div class="row sm" style="justify-content:space-between"><span class="b">${p[0]} · ${p[2]}</span><span class="muted">${p[1]}</span></div><div class="bar" style="margin-top:5px;height:8px"><i style="width:${p[1]/412*100}%"></i></div></div>`).join('')}</div></div>
+      <div class="card"><div class="card-h"><h3>Por tipo de negocio</h3></div><div class="row" style="gap:6px">${[['Barberías',124],['Salones',88],['Uñas',71],['Salud',54],['Spa',39],['Fitness',36]].map(x=>`<span class="pill-m">${x[0]} <b>${x[1]}</b></span>`).join('')}</div></div>
+    </div>
+  </div>`};
+
+/* ---------- drawer, paleta, notificaciones ---------- */
+const layer=document.getElementById('layer');
+function closeLayer(){layer.hidden=true;layer.innerHTML=''}
+layer.addEventListener('click',e=>{if(e.target===layer||e.target.closest('[data-close]'))closeLayer()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLayer();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPal()}});
+function openDrawer(i){
+  const a=AP[i],s=STAFF[a[0]],pr=PRICE[a[4]]||50,dep=Math.max(10,Math.round(pr*.3/5)*5);
+  const order=['ag','conf','lleg','curso','comp'],lvl={pend:0,conf:1,curso:3,comp:4,can:0,nos:1}[a[5]];
+  const steps=[['Agendada','Lun 5 oct · 18:22 · desde la web'],['Confirmada','Mar 6 oct · 08:00 · respondió por WhatsApp'],['Llegó',`${hm(a[1]-.08)} · marcado por recepción`],['En curso',`${hm(a[1])} · ${s[0].split(' ')[0]}`],['Completada','Pagado y cerrado']];
+  layer.innerHTML=`<aside class="drawer" role="dialog" aria-label="Detalle de la cita">
+    <div class="row"><span class="muted sm">Cita #UB-${2470+i}</span>${chip(a[5])}<button class="icbtn sp" type="button" data-close aria-label="Cerrar">${ic('x')}</button></div>
+    <div class="row" style="flex-wrap:nowrap">${av(a[3],cc(a[3]),'l r')}<div><div class="b" style="font-size:16px">${a[3]}</div><div class="muted sm">+51 987 654 321 · 14 visitas</div><div class="row" style="gap:5px;margin-top:4px"><span class="tag">VIP</span><span class="tag t">Prefiere WhatsApp</span></div></div></div>
+    <div class="row"><button class="btn sm" type="button">${ic('msg',13)} WhatsApp</button><button class="btn sm" type="button">${ic('phone',13)} Llamar</button><button class="btn sm" type="button" data-close data-go="ficha">${ic('idc',13)} Ver ficha</button></div>
+    <dl class="dl" style="border-top:1px solid var(--line);padding-top:14px">
+      <dt>${ic('sc',15)} Servicio</dt><dd>${a[4]}</dd>
+      <dt>${ic('user',15)} Profesional</dt><dd>${s[0]}</dd>
+      <dt>${ic('cal',15)} Fecha</dt><dd>Martes 6 oct · ${hm(a[1])} – ${hm(a[1]+a[2])}</dd>
+      <dt>${ic('box',15)} Recurso</dt><dd>Sillón ${a[0]+1}</dd>
+      <dt>${ic('pin',15)} Sucursal</dt><dd>Miraflores</dd>
+    </dl>
+    <div><div class="lbl" style="margin-bottom:10px">Estado</div><div class="tl">${steps.map((st,k)=>{const cls=a[5]==='can'||a[5]==='nos'?(k===0?'done':''):(k<lvl?'done':k===lvl?'cur':'');return `<div class="tl-i ${cls}"><span class="tl-d">${cls==='done'?ic('chk',11):''}</span><div><b>${st[0]}</b><div class="muted sm">${cls?st[1]:'—'}</div></div></div>`}).join('')}
+      ${a[5]==='can'?`<div class="tl-i"><span class="tl-d" style="border-color:var(--bad);background:var(--bad-bg)"></span><div><b style="color:var(--bad)">Cancelada por el cliente</b><div class="muted sm">Depósito devuelto (más de 12 h)</div></div></div>`:''}
+      ${a[5]==='nos'?`<div class="tl-i"><span class="tl-d" style="border-color:var(--off);background:var(--off-bg)"></span><div><b>No asistió</b><div class="muted sm">Depósito retenido según la política</div></div></div>`:''}</div></div>
+    <div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px">
+      <div class="sumr" style="border:0;padding-top:0"><span>Total</span><b>S/ ${pr.toFixed(2)}</b></div>
+      <div class="sumr"><span>Depósito (Yape)</span><b style="color:var(--ok)">− S/ ${dep.toFixed(2)}</b></div>
+      <div class="sumr"><span>Saldo por cobrar</span><b>S/ ${(pr-dep).toFixed(2)}</b></div>
+    </div>
+    <div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px" class="stack"><div class="row"><span class="b sm">Campos de la cita</span><span class="tag t sp">Personalizados</span></div><dl class="dl"><dt>Tipo de corte</dt><dd>Fade bajo</dd><dt>Producto</dt><dd>Cera mate</dd></dl></div>
+    <div class="fld"><label for="dnota">Nota de la cita</label><textarea class="inp" id="dnota">Pidió que le recuerden comprar cera.</textarea></div>
+    <div class="row" style="margin-top:auto;border-top:1px solid var(--line);padding-top:14px"><button class="btn" type="button">Reprogramar</button><button class="btn dng" type="button">Cancelar</button><button class="btn pri sp" type="button">${a[5]==='pend'?'Confirmar':a[5]==='conf'?'Marcar llegada':a[5]==='curso'?'Cobrar S/ '+(pr-dep):'Volver a agendar'}</button></div>
+  </aside>`;
+  layer.hidden=false;
+}
+function openPal(){
+  layer.innerHTML=`<div class="pal" role="dialog" aria-label="Búsqueda rápida"><div class="pal-in">${ic('search')}<input id="palq" value="mat" aria-label="Buscar"><kbd class="pill-m">Esc</kbd></div>
+    <div class="pal-g"><div class="pal-t">Clientes</div>
+      <div class="pal-i on" data-close data-go="ficha">${av('Mateo Huamán',cc('Mateo Huamán'),'s r')}<span><b>Mat</b>eo Huamán</span><span class="muted sm">· Hoy 15:00</span><kbd>Enter</kbd></div>
+      <div class="pal-i" data-close data-go="ficha">${av('Matías Ccori','#8F93C9','s r')}<span><b>Mat</b>ías Ccori</span><span class="muted sm">· última visita 12 sep</span></div>
+      <div class="pal-t">Citas</div>
+      <div class="pal-i" data-close data-ap="5">${ic('calc',16)}<span>Corte + barba + cejas · <b>Mat</b>eo Huamán</span><span class="muted sm">· Hoy 15:00</span></div>
+      <div class="pal-t">Acciones</div>
+      <div class="pal-i" data-close data-go="nueva">${ic('calp',16)}Nueva cita<kbd>N</kbd></div>
+      <div class="pal-i" data-close data-go="clientes">${ic('user',16)}Nuevo cliente<kbd>C</kbd></div>
+      <div class="pal-i" data-close data-go="agenda">${ic('cal',16)}Ir a la agenda de hoy<kbd>G A</kbd></div>
+    </div></div>`;
+  layer.hidden=false;const q=document.getElementById('palq');q.focus();q.setSelectionRange(3,3);
+}
+function openNotif(){
+  layer.innerHTML=`<div class="notif" role="dialog" aria-label="Notificaciones"><div class="row" style="margin-bottom:8px"><span class="b" style="font-size:14px">Notificaciones</span><button class="btn sm sp" type="button">Marcar todo como leído</button></div>
+    <div class="seg" style="margin-bottom:8px"><button class="on" type="button">Todas</button><button type="button">Reservas</button><button type="button">Pagos</button><button type="button">Sistema</button></div>
+    ${[['calp','var(--teal)','var(--teal-soft)','Nueva reserva web','Lucía Mendoza · Tinte + corte · hoy 14:30','hace 4 min',1],['x','var(--bad)','var(--bad-bg)','Cita cancelada','Hugo Silva canceló jue 8 · 15:00. 3 personas en espera coinciden.','hace 20 min',1],['cash','var(--ok)','var(--ok-bg)','Depósito recibido','Mateo Huamán pagó S/ 20 por Yape','hace 1 h',1],['msg','var(--info)','var(--info-bg)','Nueva reseña 5 ★','«Luis siempre clava el corte»','hace 2 h',0],['clock','var(--warn)','var(--warn-bg)','5 citas sin confirmar','Para mañana miércoles','hace 3 h',0],['user','var(--brand)','var(--brand-soft)','Diego pidió permiso','Hoy desde las 17:30 · trámite','ayer',0]].map(n=>`<div class="ni${n[6]?' u':''}"><span class="av" style="color:${n[1]};background:${n[2]}">${ic(n[0],16)}</span><div style="min-width:0"><div class="b sm">${n[3]}</div><div class="sm" style="color:var(--ink-2)">${n[4]}</div><div class="muted" style="font-size:10.5px;margin-top:2px">${n[5]}</div></div>${n[6]?'<span class="ud"></span>':'<span></span>'}</div>`).join('')}
+  </div>`;
+  layer.hidden=false;
+}
+document.getElementById('openPal').addEventListener('click',openPal);
+document.getElementById('openNotif').addEventListener('click',openNotif);
+
+/* ---------- navegación ---------- */
+const nav=document.getElementById('nav');
+function buildNav(){
+  const groups={};Object.entries(S).forEach(([k,v])=>(groups[v.g]=groups[v.g]||[]).push([k,v]));
+  nav.innerHTML=Object.entries(groups).map(([g,items])=>`<div class="nav-g"><div class="nav-t">${g}</div>${items.map(([k,v])=>`<button class="nav-a" type="button" data-go="${k}"><span class="nb">${ic(v.i,14)}</span>${v.l}</button>`).join('')}</div>`).join('');
+}
+function go(k){
+  if(!S[k])k='dash';
+  const s=S[k];
+  document.getElementById('screen').innerHTML=s.r();
+  document.getElementById('crumb').innerHTML=`${ic('home',12)} / ${s.c}`;
+  document.getElementById('ttl').textContent=s.l;
+  nav.querySelectorAll('.nav-a').forEach(a=>a.classList.toggle('on',a.dataset.go===k));
+  try{history.replaceState(null,'','#'+k)}catch(e){}
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.tg');if(t){t.classList.toggle('on');t.setAttribute('aria-pressed',t.classList.contains('on'));return}
+  const c=e.target.closest('.ck');if(c&&!e.target.closest('tr[data-go]')){c.classList.toggle('on');c.innerHTML=c.classList.contains('on')?ic('chk',11):'';return}
+  const ap=e.target.closest('[data-ap]');if(ap){openDrawer(+ap.dataset.ap);return}
+  const g=e.target.closest('[data-go]');if(g){if(g.closest('#layer'))closeLayer();go(g.dataset.go);return}
+  const sg=e.target.closest('.seg button');if(sg){sg.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));sg.classList.add('on');return}
+  const fc=e.target.closest('.fchip');if(fc){fc.parentNode.querySelectorAll('.fchip').forEach(b=>b.classList.remove('on'));fc.classList.add('on');return}
+  const vt=e.target.closest('.vt');if(vt){vt.parentNode.querySelectorAll('.vt').forEach(b=>b.classList.remove('on'));vt.classList.add('on');return}
+  const sl=e.target.closest('.slot:not(:disabled)');if(sl){document.querySelectorAll('.slot').forEach(b=>b.classList.remove('on'));sl.classList.add('on');return}
+  const ct=e.target.closest('#cfgTabs button');if(ct){ct.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===ct));document.querySelectorAll('[data-p]').forEach(p=>p.hidden=p.dataset.p!==ct.dataset.t);return}
+  const tb=e.target.closest('.tabs button');if(tb){tb.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===tb));return}
+  if(e.target.closest('#copyUrl')){const i=document.getElementById('url');const b=e.target.closest('#copyUrl');const done=()=>{b.innerHTML=ic('chk',14)+' Copiado'};try{navigator.clipboard.writeText('https://'+i.value).then(done,()=>{i.select()})}catch(err){i.select()}}
+});
+buildNav();
+go((location.hash||'').slice(1)||'dash');
+</script>

@@ -1,0 +1,123 @@
+/*
+ * Tokens de diseño de uBook. Base: docs/ubook-prototipo.html.
+ *
+ * Cambios respecto al prototipo, para cumplir contraste WCAG AA (4.5:1) en texto:
+ * - --muted       #9799AE → #6A6C8B
+ * - --ok/warn/bad/off/done: tonos más oscuros para texto sobre su fondo suave.
+ * - --teal-ink    nuevo: teal para TEXTO. --teal queda para rellenos, bordes y foco.
+ * - --grad        arranca en un teal más profundo para que el texto blanco se lea.
+ */
+:root {
+  color-scheme: light;
+
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #f4f5f8;
+  --ink: #1e1f3b;
+  --ink-2: #4a4c6b;
+  --muted: #6a6c8b;
+  --line: #ecedf2;
+  --line-strong: #d9dbe6;
+
+  --brand: #575b9f;
+  --brand-soft: #eeeff8;
+  --teal: #62c9d6;
+  --teal-ink: #1a7480;
+  --teal-soft: #e6f7f9;
+  --teal-line: #92d6e0;
+  --grad: linear-gradient(160deg, #3fa9b8 0%, #4f78b0 48%, #575b9f 100%);
+  --on-grad: #ffffff;
+
+  --ok: #1c7380;
+  --ok-bg: #e3f5f7;
+  --warn: #67589f;
+  --warn-bg: #efedf8;
+  --bad: #a8435a;
+  --bad-bg: #f9e8ec;
+  --info: #575b9f;
+  --info-bg: #e9eaf6;
+  --off: #686a80;
+  --off-bg: #f0f1f5;
+  --done: #5e6182;
+  --done-bg: #edeef3;
+
+  --overlay: rgb(17 19 41 / 0.38);
+  --shadow: 0 1px 2px rgb(31 34 69 / 0.04), 0 8px 24px rgb(31 34 69 / 0.06);
+  --shadow-pop: 0 20px 60px rgb(0 0 0 / 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #0f1024;
+    --surface: #181a33;
+    --surface-2: #212342;
+    --ink: #ecedf7;
+    --ink-2: #bfc1d9;
+    --muted: #9294b3;
+    --line: #272a49;
+    --line-strong: #363a5e;
+
+    --brand: #a4a8f0;
+    --brand-soft: #282b55;
+    --teal: #62c9d6;
+    --teal-ink: #7ed8e3;
+    --teal-soft: #133940;
+    --teal-line: #2b6a74;
+
+    --ok: #6fd0dc;
+    --ok-bg: #143439;
+    --warn: #b4a8ee;
+    --warn-bg: #2b2650;
+    --bad: #f2909f;
+    --bad-bg: #3e1e2b;
+    --info: #a4a8f0;
+    --info-bg: #262a55;
+    --off: #a4a6bf;
+    --off-bg: #262840;
+    --done: #b6b8d3;
+    --done-bg: #2a2c45;
+
+    --overlay: rgb(4 5 15 / 0.6);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-pop: 0 20px 60px rgb(0 0 0 / 0.6);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0f1024;
+  --surface: #181a33;
+  --surface-2: #212342;
+  --ink: #ecedf7;
+  --ink-2: #bfc1d9;
+  --muted: #9294b3;
+  --line: #272a49;
+  --line-strong: #363a5e;
+
+  --brand: #a4a8f0;
+  --brand-soft: #282b55;
+  --teal: #62c9d6;
+  --teal-ink: #7ed8e3;
+  --teal-soft: #133940;
+  --teal-line: #2b6a74;
+
+  --ok: #6fd0dc;
+  --ok-bg: #143439;
+  --warn: #b4a8ee;
+  --warn-bg: #2b2650;
+  --bad: #f2909f;
+  --bad-bg: #3e1e2b;
+  --info: #a4a8f0;
+  --info-bg: #262a55;
+  --off: #a4a6bf;
+  --off-bg: #262840;
+  --done: #b6b8d3;
+  --done-bg: #2a2c45;
+
+  --overlay: rgb(4 5 15 / 0.6);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-pop: 0 20px 60px rgb(0 0 0 / 0.6);
+}

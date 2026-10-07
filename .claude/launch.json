@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ubook-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "uBook-web", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "ubook-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "uBook-api", "dev:memory"],
+      "port": 3000
+    },
+    {
+      "name": "ubook-api-test",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "uBook-api", "dev:memory", "--once"],
+      "env": { "PORT": "3100", "APP_URL": "http://localhost:5180" },
+      "port": 3100
+    },
+    {
+      "name": "ubook-web-test",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "uBook-web", "exec", "vite", "--port", "5180", "--strictPort"],
+      "env": { "API_TARGET": "http://localhost:3100" },
+      "port": 5180
+    }
+  ]
+}
