@@ -1,5 +1,6 @@
 import { Moon, Sun } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Logo } from '@/components/brand/logo'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { useTheme } from '@/lib/theme'
 
@@ -30,7 +31,9 @@ export function PublicLayout({ title, subtitle, logoUrl, children }: { title?: s
       </header>
       <main className="mx-auto -mt-10 flex max-w-[680px] flex-col gap-4 px-4 pb-12">{children}</main>
       <footer className="pb-8 text-center text-2xs text-muted">
-        Reservas con <span className="font-bold text-brand">u<span className="text-teal">Book</span></span>
+        <a href="/inicio" className="inline-flex items-center gap-1.5 text-muted no-underline hover:text-ink">
+          Reservas con <Logo size="sm" />
+        </a>
       </footer>
     </div>
   )

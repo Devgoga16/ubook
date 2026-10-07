@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useBranch } from '@/lib/auth/branch-context'
 import { cn } from '@/lib/cn'
 import { OrgLogo } from '@/components/ui/org-logo'
+import { Logo } from '@/components/brand/logo'
 import { findNavItem, visibleNav, type NavItem } from './nav'
 
 function NavEntry({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
@@ -83,8 +84,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex min-h-full flex-col gap-4 px-3.5 py-5">
-      <div className="border-b border-line px-2 pb-3.5 text-center text-[23px] font-bold tracking-[-.02em] text-brand">
-        u<span className="text-teal">Book</span>
+      <div className="flex justify-center border-b border-line px-2 pb-3.5">
+        <Logo />
       </div>
 
       <div className="flex flex-col items-center gap-2 pt-1 pb-1.5">

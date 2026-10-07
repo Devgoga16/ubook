@@ -6,15 +6,14 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/display'
 import { meets } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/auth-context'
+import { Logo } from '@/components/brand/logo'
 import { homeFor } from '@/lib/auth/home'
 import { LandingPage } from '@/features/landing/landing-page'
 
 function Splash() {
   return (
     <div className="grid min-h-screen place-items-center" role="status" aria-label="Cargando">
-      <div className="animate-pulse text-[26px] font-bold tracking-[-.02em] text-brand">
-        u<span className="text-teal">Book</span>
-      </div>
+      <Logo size="lg" className="animate-pulse" />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { BellRing, CalendarDays, ChartColumn, Check, Clock, House, Search, Users, Wallet } from 'lucide-react'
+import { Logo } from '@/components/brand/logo'
 import { SERVICE_COLORS } from '@/features/services/colors'
 import { cn } from '@/lib/cn'
 
@@ -41,9 +42,7 @@ export function HeroMockup() {
         <div className="flex">
           {/* Menú lateral */}
           <div className="hidden w-[150px] flex-none flex-col gap-1 border-r border-line p-3 md:flex">
-            <div className="mb-3 px-1.5 text-lg font-bold tracking-[-.02em] text-brand">
-              u<span className="text-teal">Book</span>
-            </div>
+            <Logo size="sm" className="mb-3 px-1.5" />
             {[
               [House, 'Dashboard'],
               [CalendarDays, 'Agenda'],

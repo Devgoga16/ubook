@@ -30,6 +30,10 @@
   --grad-text: linear-gradient(100deg, #243352 15%, #9a5a06 95%);
   --on-grad: #ffffff;
 
+  /* Logo: "u" ámbar + "Book" azul noche (claro) o casi blanco (oscuro). */
+  --logo-accent: #f4b550;
+  --logo-ink: #293453;
+
   --ok: #287346;
   --ok-bg: #e6f4ec;
   --warn: #a04a1a;
@@ -70,6 +74,8 @@
     --on-teal: #1c2742;
     --grad: linear-gradient(160deg, #3b5490 0%, #2e4372 48%, #22305a 100%);
     --grad-text: linear-gradient(100deg, #e9edf6 10%, #f4b24e 90%);
+    --logo-ink: #e9edf6;
+    --logo-ring: rgb(255 255 255 / 0.3);
 
     --ok: #7fd3a1;
     --ok-bg: #16342a;
@@ -111,6 +117,8 @@
   --on-teal: #1c2742;
   --grad: linear-gradient(160deg, #3b5490 0%, #2e4372 48%, #22305a 100%);
   --grad-text: linear-gradient(100deg, #e9edf6 10%, #f4b24e 90%);
+  --logo-ink: #e9edf6;
+  --logo-ring: rgb(255 255 255 / 0.3);
 
   --ok: #7fd3a1;
   --ok-bg: #16342a;

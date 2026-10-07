@@ -32,6 +32,8 @@
   --color-teal-soft: var(--teal-soft);
   --color-teal-line: var(--teal-line);
   --color-on-teal: var(--on-teal);
+  --color-logo-accent: var(--logo-accent);
+  --color-logo-ink: var(--logo-ink);
   --color-on-grad: var(--on-grad);
   --color-ok: var(--ok);
   --color-ok-bg: var(--ok-bg);

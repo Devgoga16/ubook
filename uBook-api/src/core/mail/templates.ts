@@ -16,7 +16,8 @@ function layout(opts: { title: string; paragraphs: string[]; cta?: { label: stri
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:16px;padding:32px">
       <tr><td>
-        <div style="font-size:22px;font-weight:700;color:#243352;margin-bottom:24px">u<span style="color:#E09A2C">Book</span></div>
+        <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px"><span style="color:#F4B550">u</span><span style="color:#293453">Book</span></div>
+        <div style="font-size:12px;color:#626B84;margin-bottom:24px">Tu negocio. Tus reservas.</div>
         <h1 style="margin:0 0 16px;font-size:20px;color:#1B2338">${escape(opts.title)}</h1>
         ${body}${button}
         ${opts.footer ? `<p style="margin:24px 0 0;font-size:12px;color:#626B84">${opts.footer}</p>` : ''}

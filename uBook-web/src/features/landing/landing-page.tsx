@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
+import { Logo, TAGLINE } from '@/components/brand/logo'
 import { useAuth } from '@/lib/auth/auth-context'
 import { homeFor } from '@/lib/auth/home'
 import { cn } from '@/lib/cn'
@@ -96,14 +97,6 @@ export function LandingPage() {
 }
 
 /* ── Estructura ───────────────────────────────────────────── */
-
-function Logo({ className }: { className?: string }) {
-  return (
-    <span className={cn('text-[22px] font-bold tracking-[-.03em] text-brand', className)}>
-      u<span className="text-teal">Book</span>
-    </span>
-  )
-}
 
 function Header() {
   const { status, me } = useAuth()
@@ -636,7 +629,8 @@ function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <Logo />
-            <p className="mt-3 mb-0 max-w-[300px] text-sm leading-relaxed text-ink-2">
+            <p className="mt-3 mb-0 text-md font-semibold text-ink">{TAGLINE}</p>
+            <p className="mt-1.5 mb-0 max-w-[300px] text-sm leading-relaxed text-ink-2">
               Reservas online, agenda, pagos y clientes para negocios que atienden con cita.
             </p>
           </div>
