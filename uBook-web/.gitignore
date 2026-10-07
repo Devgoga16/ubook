@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Variables de entorno locales (en Vercel se cargan desde el panel)
+.env
+.env.*
+!.env.example
+.vercel

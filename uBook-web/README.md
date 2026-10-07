@@ -11,6 +11,21 @@ pnpm build
 
 Necesita la API corriendo. Sin MongoDB instalado: `pnpm --dir ../uBook-api dev:memory`.
 
+## Despliegue en Vercel
+
+1. Importa el repo en Vercel con **Root Directory = `uBook-web`**. El resto lo toma de `vercel.json`
+   (Vite, pnpm, salida `dist`, rutas de la SPA y caché de `/assets`).
+2. En **Settings → Environment Variables** agrega `VITE_API_URL` con la URL pública de la API
+   (con o sin `/api` al final). Es de compilación: si la cambias, vuelve a desplegar.
+3. En la API configura:
+   - `CORS_ORIGIN`: el dominio de la web (varios separados por coma, p. ej. el de producción y el `*.vercel.app`).
+   - `APP_URL`: el dominio de la web, para los enlaces de los correos.
+   - `COOKIE_SAMESITE`: `lax` si web y API comparten dominio (`app.tudominio.com` + `api.tudominio.com`),
+     `none` si están en dominios distintos (`*.vercel.app` + `*.onrender.com`).
+
+Recomendado: dominios propios del mismo sitio. Con dominios distintos la sesión depende de cookies de
+terceros, que Safari (iPhone/Mac) bloquea por defecto: ahí habría que iniciar sesión en cada recarga.
+
 ## Sesión
 
 - El access token vive solo en memoria; la sesión se renueva con una cookie httpOnly (`lib/api/client.ts`).

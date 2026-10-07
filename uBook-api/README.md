@@ -45,7 +45,8 @@ docker run -p 4000:4000 --env-file .env ubook-api
 - Healthcheck incluido: `GET /api/health` (también revisa la base de datos).
 - Variables obligatorias en producción: `MONGODB_URI` (replica set), `JWT_ACCESS_SECRET`
   (32+ caracteres) y `RECORDS_ENCRYPTION_KEY`. Además, según lo que uses: `CORS_ORIGIN`,
-  `APP_URL`, `SUPERADMIN_EMAIL`/`SUPERADMIN_PASSWORD`, `RESEND_API_KEY`/`MAIL_FROM` y `R2_*`.
+  `APP_URL`, `COOKIE_SAMESITE` (ver el README de la web), `SUPERADMIN_EMAIL`/`SUPERADMIN_PASSWORD`,
+  `RESEND_API_KEY`/`MAIL_FROM` y `R2_*`.
 - Sin Cloudflare R2, los archivos (comprobantes, logos) van a `/app/uploads`: monta un volumen
   (`-v ubook-uploads:/app/uploads`) para no perderlos al recrear el contenedor.
 - `docker stop` apaga la API de forma ordenada (cierra conexiones antes de salir).

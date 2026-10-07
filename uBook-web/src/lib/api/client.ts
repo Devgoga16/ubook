@@ -5,7 +5,17 @@
  * - Ante un 401 se renueva la sesión una vez y se reintenta la petición.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
+/**
+ * Dónde está la API. Sin VITE_API_URL, en el mismo origen (/api: proxy de Vite o de Vercel).
+ * Acepta la URL con o sin /api al final: "https://api.tudominio.com" → "https://api.tudominio.com/api".
+ */
+export function apiBaseUrl(raw: string | undefined): string {
+  const url = raw?.trim().replace(/\/+$/, '')
+  if (!url) return '/api'
+  return url.endsWith('/api') ? url : `${url}/api`
+}
+
+const BASE_URL = apiBaseUrl(import.meta.env.VITE_API_URL)
 
 export class ApiError extends Error {
   readonly status: number

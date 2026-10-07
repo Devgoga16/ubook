@@ -39,6 +39,15 @@ export class Env {
   @IsString()
   CORS_ORIGIN = 'http://localhost:5173';
 
+  /**
+   * SameSite de la cookie de sesión.
+   * - lax (por defecto): web y API en el mismo sitio (app.tudominio.com + api.tudominio.com).
+   * - none: web y API en dominios distintos (p. ej. *.vercel.app + *.onrender.com).
+   *   Exige HTTPS, y Safari puede bloquearla: mejor usar dominios propios.
+   */
+  @IsIn(['lax', 'strict', 'none'])
+  COOKIE_SAMESITE: 'lax' | 'strict' | 'none' = 'lax';
+
   @Type(() => Number)
   @IsInt()
   @Min(1)

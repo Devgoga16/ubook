@@ -151,13 +151,7 @@ export class AuthController {
   }
 
   private respond(res: Response, { tokens, context }: AuthResult) {
-    res.cookie(REFRESH_COOKIE, tokens.refreshToken, {
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV', { infer: true }) === 'production',
-      sameSite: 'lax',
-      path: REFRESH_COOKIE_PATH,
-      expires: tokens.refreshTokenExpiresAt,
-    });
+    res.cookie(REFRESH_COOKIE, tokens.refreshToken, { ...this.cookieOptions(), expires: tokens.refreshTokenExpiresAt });
     return {
       accessToken: tokens.accessToken,
       expiresIn: tokens.accessTokenExpiresIn,
@@ -166,7 +160,14 @@ export class AuthController {
   }
 
   private clearCookie(res: Response) {
-    res.clearCookie(REFRESH_COOKIE, { path: REFRESH_COOKIE_PATH });
+    res.clearCookie(REFRESH_COOKIE, this.cookieOptions());
+  }
+
+  /** SameSite=None solo funciona con Secure (HTTPS). */
+  private cookieOptions() {
+    const sameSite = this.config.get('COOKIE_SAMESITE', { infer: true });
+    const secure = sameSite === 'none' || this.config.get('NODE_ENV', { infer: true }) === 'production';
+    return { httpOnly: true, secure, sameSite, path: REFRESH_COOKIE_PATH } as const;
   }
 }
 
